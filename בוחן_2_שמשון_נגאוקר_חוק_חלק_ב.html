@@ -10391,50 +10391,21 @@ function loadState() {
   } catch(e) {}
 }
 
-async function exportProgress() {
+function exportProgress() {
   const state = collectState();
   const json = JSON.stringify(state, null, 2);
-  const fileName = 'התקדמות_' + EXAMINER_NAME.replace(/\s/g, '_') + '.json';
-
-  // Method 1: navigator.share (mobile share sheet - best for mobile)
-  if (navigator.share && navigator.canShare) {
-    try {
-      const file = new File([json], fileName, { type: 'application/json' });
-      if (navigator.canShare({ files: [file] })) {
-        await navigator.share({
-          files: [file],
-          title: 'שמירת התקדמות בדיקה',
-          text: 'קובץ התקדמות - ' + EXAMINER_NAME
-        });
-        document.getElementById('saveStatus').textContent = 'נשמר! ' + new Date().toLocaleTimeString('he-IL');
-        showToast('ההתקדמות נשמרה בהצלחה!');
-        return;
-      }
-    } catch(e) {
-      if (e.name === 'AbortError') return; // user cancelled share
-    }
-  }
-
-  // Method 2: Blob download (desktop / fallback)
-  try {
-    const blob = new Blob([json], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = fileName;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-    document.getElementById('saveStatus').textContent = 'נשמר! ' + new Date().toLocaleTimeString('he-IL');
-    showToast('הקובץ נשמר!');
-    return;
-  } catch(e) {}
-
-  // Method 3: Open in new tab (last resort)
-  const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(json);
-  window.open(dataUri, '_blank');
-  showToast('הקובץ נפתח בלשונית חדשה - שמרו אותו');
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'התקדמות_' + EXAMINER_NAME.replace(/\s/g, '_') + '.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  const statusEl = document.getElementById('saveStatus');
+  statusEl.textContent = 'נשמר בהצלחה! ' + new Date().toLocaleTimeString('he-IL');
+  showToast('הקובץ נשמר! תוכלו לטעון אותו בפעם הבאה');
 }
 
 function importProgress(event) {
