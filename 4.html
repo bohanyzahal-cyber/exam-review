@@ -308,16 +308,31 @@
   }
   .toast.show { opacity: 1; }
 
+  .open-in-browser {
+    background: #fce8e6;
+    border: 2px solid #ea4335;
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    font-size: 14px;
+    text-align: center;
+    display: none;
+  }
+  .open-in-browser b { color: #c5221f; }
+
   .save-bar {
     background: white;
     border-radius: 12px;
     padding: 12px 16px;
     margin-bottom: 16px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+  .save-buttons {
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
     align-items: center;
+    margin-bottom: 8px;
   }
   .save-bar .save-label {
     font-weight: 600;
@@ -350,8 +365,31 @@
   .btn-save-import:active { background: #d2e3fc; }
   .save-status {
     font-size: 12px;
+    color: #34a853;
+    font-weight: 600;
+  }
+  .save-textarea {
+    display: none;
+    width: 100%;
+    height: 80px;
+    border: 1px solid #dadce0;
+    border-radius: 8px;
+    padding: 8px;
+    font-size: 11px;
+    font-family: monospace;
+    direction: ltr;
+    resize: vertical;
+    margin-top: 8px;
+  }
+  .save-textarea:focus {
+    outline: none;
+    border-color: #1a73e8;
+  }
+  .save-help {
+    font-size: 12px;
     color: #5f6368;
-    margin-right: auto;
+    margin-top: 4px;
+    display: none;
   }
 
   .back-to-top {
@@ -398,12 +436,20 @@
   </div>
 </div>
 
-<div class="save-bar">
-  <span class="save-label">שמירת התקדמות:</span>
-  <button class="btn-save btn-save-export" onclick="exportProgress()">💾 שמור לקובץ</button>
-  <button class="btn-save btn-save-import" onclick="document.getElementById('fileInput').click()">📂 טען מקובץ</button>
-  <input type="file" id="fileInput" accept=".json" style="display:none" onchange="importProgress(event)">
-  <span class="save-status" id="saveStatus"></span>
+<div class="open-in-browser" id="browserWarning">
+  <b>שימו לב!</b> פתחו את הקישור הזה ב-<b>כרום</b> (לא בדפדפן של וואטסאפ) כדי שהעבודה תישמר אוטומטית.<br>
+  לחצו על <b>⋮</b> למעלה ובחרו <b>"פתח בכרום"</b> / <b>"Open in Chrome"</b>
+</div>
+
+<div class="save-bar" id="saveBar">
+  <div class="save-buttons">
+    <span class="save-label">שמירת התקדמות:</span>
+    <button class="btn-save btn-save-export" onclick="exportProgress()">💾 שמור</button>
+    <button class="btn-save btn-save-import" onclick="showLoadArea()">📂 טען</button>
+    <span class="save-status" id="saveStatus"></span>
+  </div>
+  <textarea class="save-textarea" id="saveTextarea" placeholder="הדביקו כאן את קוד ההתקדמות שהעתקתם..."></textarea>
+  <div class="save-help" id="saveHelp"></div>
 </div>
 
 <div class="instructions">
@@ -415,8 +461,8 @@
     <li>אם יש תמונה - ודאו שהיא מתאימה לשאלה</li>
     <li>לכל שאלה סמנו: <b>תקין</b> / <b>בעייתית</b> / <b>לא רלוונטית</b></li>
     <li>אם בעייתית או לא רלוונטית - כתבו הערה קצרה</li>
-    <li><b>לפני שסוגרים</b> - לחצו <b>"שמור לקובץ"</b> למעלה</li>
-    <li>כשחוזרים - לחצו <b>"טען מקובץ"</b> כדי להמשיך מאיפה שעצרתם</li>
+    <li><b>לפני שסוגרים</b> - לחצו <b>"שמור"</b>, שלחו לעצמכם את הקוד בוואטסאפ</li>
+    <li>כשחוזרים - לחצו <b>"טען"</b>, הדביקו את הקוד, וזה יחזיר הכל</li>
     <li>בסיום - לחצו על <b>"צור סיכום"</b> בתחתית העמוד</li>
   </ol>
 </div>
@@ -7955,72 +8001,78 @@ function loadState() {
   } catch(e) {}
 }
 
-async function exportProgress() {
-  const state = collectState();
-  const json = JSON.stringify(state, null, 2);
-  const fileName = 'התקדמות_' + EXAMINER_NAME.replace(/\s/g, '_') + '.json';
+function exportProgress() {
+  var state = collectState();
+  var json = JSON.stringify(state);
+  // compress: base64 encode
+  var code = btoa(unescape(encodeURIComponent(json)));
 
-  // Method 1: navigator.share (mobile share sheet - best for mobile)
-  if (navigator.share && navigator.canShare) {
-    try {
-      const file = new File([json], fileName, { type: 'application/json' });
-      if (navigator.canShare({ files: [file] })) {
-        await navigator.share({
-          files: [file],
-          title: 'שמירת התקדמות בדיקה',
-          text: 'קובץ התקדמות - ' + EXAMINER_NAME
-        });
-        document.getElementById('saveStatus').textContent = 'נשמר! ' + new Date().toLocaleTimeString('he-IL');
-        showToast('ההתקדמות נשמרה בהצלחה!');
-        return;
-      }
-    } catch(e) {
-      if (e.name === 'AbortError') return; // user cancelled share
-    }
+  // show in textarea for manual copy
+  var ta = document.getElementById('saveTextarea');
+  ta.style.display = 'block';
+  ta.value = code;
+  ta.select();
+  ta.setSelectionRange(0, 99999);
+
+  // try clipboard
+  try {
+    navigator.clipboard.writeText(code).then(function() {
+      document.getElementById('saveStatus').textContent = 'הועתק! ' + new Date().toLocaleTimeString('he-IL');
+      showToast('הקוד הועתק! שלחו אותו לעצמכם בוואטסאפ');
+    }).catch(function() {
+      fallbackCopy(ta, code);
+    });
+  } catch(e) {
+    fallbackCopy(ta, code);
   }
 
-  // Method 2: Blob download (desktop / fallback)
-  try {
-    const blob = new Blob([json], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = fileName;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-    document.getElementById('saveStatus').textContent = 'נשמר! ' + new Date().toLocaleTimeString('he-IL');
-    showToast('הקובץ נשמר!');
-    return;
-  } catch(e) {}
-
-  // Method 3: Open in new tab (last resort)
-  const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(json);
-  window.open(dataUri, '_blank');
-  showToast('הקובץ נפתח בלשונית חדשה - שמרו אותו');
+  var help = document.getElementById('saveHelp');
+  help.style.display = 'block';
+  help.innerHTML = 'הקוד למעלה = ההתקדמות שלכם. <b>העתיקו ושלחו לעצמכם בוואטסאפ.</b><br>בפעם הבאה לחצו "טען" והדביקו אותו.';
 }
 
-function importProgress(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    try {
-      const state = JSON.parse(e.target.result);
-      applyState(state);
-      // also save to localStorage
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(ex) {}
-      const reviewed = Object.keys(state.statuses || {}).length;
-      showToast('ההתקדמות נטענה! ' + reviewed + ' שאלות שנבדקו');
-      const statusEl = document.getElementById('saveStatus');
-      statusEl.textContent = 'נטען מקובץ: ' + file.name;
-    } catch(err) {
-      showToast('שגיאה בקריאת הקובץ');
-    }
-  };
-  reader.readAsText(file);
-  event.target.value = '';
+function fallbackCopy(ta, code) {
+  try {
+    ta.focus();
+    ta.select();
+    ta.setSelectionRange(0, 99999);
+    document.execCommand('copy');
+    document.getElementById('saveStatus').textContent = 'הועתק!';
+    showToast('הקוד הועתק! שלחו אותו לעצמכם בוואטסאפ');
+  } catch(e2) {
+    document.getElementById('saveStatus').textContent = 'סמנו את הקוד למעלה והעתיקו ידנית';
+    showToast('סמנו את כל הטקסט בתיבה והעתיקו ידנית');
+  }
+}
+
+function showLoadArea() {
+  var ta = document.getElementById('saveTextarea');
+  ta.style.display = 'block';
+  ta.value = '';
+  ta.placeholder = 'הדביקו כאן את הקוד שהעתקתם...';
+  ta.focus();
+  var help = document.getElementById('saveHelp');
+  help.style.display = 'block';
+  help.innerHTML = 'הדביקו את הקוד ולחצו על הכפתור למטה:<br><button class="btn-save btn-save-export" onclick="loadFromTextarea()" style="margin-top:6px">טען התקדמות</button>';
+}
+
+function loadFromTextarea() {
+  var ta = document.getElementById('saveTextarea');
+  var code = ta.value.trim();
+  if (!code) { showToast('הדביקו את הקוד קודם'); return; }
+  try {
+    var json = decodeURIComponent(escape(atob(code)));
+    var state = JSON.parse(json);
+    applyState(state);
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(ex) {}
+    var reviewed = Object.keys(state.statuses || {}).length;
+    showToast('נטען בהצלחה! ' + reviewed + ' שאלות שנבדקו');
+    document.getElementById('saveStatus').textContent = 'נטען בהצלחה!';
+    ta.style.display = 'none';
+    document.getElementById('saveHelp').style.display = 'none';
+  } catch(err) {
+    showToast('קוד לא תקין. ודאו שהעתקתם את כל הטקסט');
+  }
 }
 
 function updateCardStyles() {
@@ -8174,8 +8226,20 @@ window.addEventListener('scroll', () => {
   btn.style.display = window.scrollY > 500 ? 'flex' : 'none';
 });
 
+// Detect in-app browser (WhatsApp, Facebook, etc.)
+function isInAppBrowser() {
+  var ua = navigator.userAgent || '';
+  return /FBAN|FBAV|Instagram|WhatsApp|Line|Snapchat|GSA/i.test(ua) ||
+    (ua.indexOf('wv') > -1) || (ua.indexOf('WebView') > -1);
+}
+
 // Load saved state on page load
-document.addEventListener('DOMContentLoaded', loadState);
+document.addEventListener('DOMContentLoaded', function() {
+  if (isInAppBrowser()) {
+    document.getElementById('browserWarning').style.display = 'block';
+  }
+  loadState();
+});
 </script>
 </body>
 </html>
