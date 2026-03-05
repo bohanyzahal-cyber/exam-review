@@ -1,0 +1,2549 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>סיכום בדיקת שאלות - רב בוחן</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+    background: #f0f2f5;
+    color: #1a1a1a;
+    line-height: 1.6;
+    padding: 10px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  /* Header */
+  .header {
+    background: linear-gradient(135deg, #7b1fa2, #4a148c);
+    color: white;
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 16px;
+    text-align: center;
+  }
+  .header h1 { font-size: 24px; margin-bottom: 8px; }
+  .header .subtitle { font-size: 16px; opacity: 0.9; }
+  .header .date { font-size: 13px; opacity: 0.7; margin-top: 8px; }
+
+  /* Stats Dashboard */
+  .dashboard {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+  .dashboard h2 { font-size: 18px; margin-bottom: 16px; color: #4a148c; }
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .stat-box {
+    background: #f5f5f5;
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+  }
+  .stat-num { font-size: 28px; font-weight: 700; }
+  .stat-label { font-size: 12px; color: #666; margin-top: 4px; }
+  .stat-ok .stat-num { color: #34a853; }
+  .stat-problem .stat-num { color: #ea4335; }
+  .stat-irrelevant .stat-num { color: #fbbc04; }
+  .stat-total .stat-num { color: #1a73e8; }
+  .stat-review .stat-num { color: #7b1fa2; }
+
+  /* Examiner Table */
+  .examiner-table-container {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    overflow-x: auto;
+  }
+  .examiner-table-container h2 { font-size: 18px; margin-bottom: 16px; color: #4a148c; }
+  .examiner-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .examiner-table th {
+    background: #4a148c;
+    color: white;
+    padding: 10px 8px;
+    text-align: right;
+    white-space: nowrap;
+  }
+  .examiner-table td {
+    padding: 10px 8px;
+    border-bottom: 1px solid #e0e0e0;
+    vertical-align: top;
+  }
+  .examiner-table tr:nth-child(even) { background: #fafafa; }
+  .td-ok { color: #34a853; font-weight: 600; }
+  .td-problem { color: #ea4335; font-weight: 600; }
+  .td-irrelevant { color: #e65100; font-weight: 600; }
+  .td-notes { font-size: 12px; color: #555; max-width: 200px; }
+
+  /* Progress Bar */
+  .progress-container {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .progress-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+  .progress-track {
+    background: #e0e0e0;
+    border-radius: 10px;
+    height: 14px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    background: linear-gradient(90deg, #7b1fa2, #ce93d8);
+    height: 100%;
+    border-radius: 10px;
+    transition: width 0.3s ease;
+    width: 0%;
+  }
+  .progress-counts {
+    display: flex;
+    gap: 14px;
+    margin-top: 10px;
+    font-size: 13px;
+    flex-wrap: wrap;
+  }
+  .progress-counts span { display: flex; align-items: center; gap: 4px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .dot-keep { background: #34a853; }
+  .dot-fix { background: #1a73e8; }
+  .dot-remove { background: #ea4335; }
+  .dot-dup { background: #fbbc04; }
+  .dot-pending { background: #dadce0; }
+
+  /* Filter Bar */
+  .filter-bar {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+  .filter-btn {
+    padding: 8px 16px;
+    border-radius: 20px;
+    border: 2px solid #ddd;
+    background: white;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s;
+  }
+  .filter-btn:hover { border-color: #7b1fa2; }
+  .filter-btn.active { background: #7b1fa2; color: white; border-color: #7b1fa2; }
+
+  /* Category Sections */
+  .category-section {
+    margin-bottom: 12px;
+  }
+  .category-header {
+    background: white;
+    border-radius: 12px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    transition: all 0.2s;
+  }
+  .category-header:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+  .cat-icon { font-size: 20px; }
+  .cat-title { font-size: 16px; font-weight: 600; flex: 1; }
+  .cat-count {
+    background: #7b1fa2;
+    color: white;
+    border-radius: 12px;
+    padding: 2px 10px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .cat-toggle { font-size: 14px; color: #999; transition: transform 0.3s; }
+  .category-items {
+    padding: 8px 0;
+  }
+  .category-items.collapsed {
+    display: none;
+  }
+
+  /* Issue Cards */
+  .issue-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin: 8px 0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    border-right: 4px solid #ddd;
+    transition: border-color 0.3s;
+  }
+  .issue-card[data-decision="keep"] { border-right-color: #34a853; }
+  .issue-card[data-decision="fix"] { border-right-color: #1a73e8; }
+  .issue-card[data-decision="remove"] { border-right-color: #ea4335; }
+  .issue-card[data-decision="duplicate"] { border-right-color: #fbbc04; }
+
+  .issue-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .issue-num {
+    background: #4a148c;
+    color: white;
+    border-radius: 8px;
+    padding: 2px 10px;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .issue-meta { font-size: 12px; color: #888; }
+
+  /* Examiner Feedback */
+  .examiner-feedback {
+    background: #fff3e0;
+    border: 1px solid #ffcc80;
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 14px;
+  }
+  .examiner-name { font-size: 14px; margin-bottom: 4px; }
+  .examiner-type { font-size: 13px; margin-bottom: 6px; }
+  .examiner-note {
+    font-size: 14px;
+    color: #e65100;
+    font-weight: 600;
+    padding: 8px;
+    background: white;
+    border-radius: 6px;
+    margin-top: 6px;
+  }
+
+  /* Question Display */
+  .q-image { margin: 12px 0; text-align: center; }
+  .q-image img { max-width: 100%; max-height: 300px; border-radius: 8px; border: 1px solid #eee; }
+  .no-image { font-size: 12px; color: #aaa; margin: 6px 0; }
+  .img-error { color: #ea4335; font-size: 13px; }
+  .q-text { font-size: 16px; font-weight: 600; margin: 12px 0; line-height: 1.7; }
+  .answers { margin: 10px 0; }
+  .answer { padding: 8px 12px; margin: 4px 0; border-radius: 8px; font-size: 14px; background: #f8f9fa; }
+  .answer.correct { background: #e8f5e9; border: 1px solid #a5d6a7; font-weight: 600; }
+
+  /* Decision Section */
+  .decision-section {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 2px dashed #e0e0e0;
+  }
+  .decision-label { font-size: 15px; font-weight: 700; color: #4a148c; margin-bottom: 10px; }
+  .decision-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .decision-buttons label { cursor: pointer; }
+  .decision-buttons input[type="radio"] { display: none; }
+  .btn-decision {
+    display: inline-block;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    border: 2px solid #ddd;
+    transition: all 0.2s;
+  }
+  .btn-keep { color: #34a853; }
+  .btn-fix { color: #1a73e8; }
+  .btn-remove { color: #ea4335; }
+  .btn-dup { color: #e65100; }
+  .decision-buttons input:checked + .btn-keep { background: #e8f5e9; border-color: #34a853; }
+  .decision-buttons input:checked + .btn-fix { background: #e3f2fd; border-color: #1a73e8; }
+  .decision-buttons input:checked + .btn-remove { background: #fce4ec; border-color: #ea4335; }
+  .decision-buttons input:checked + .btn-dup { background: #fff3e0; border-color: #e65100; }
+
+  .chief-notes {
+    width: 100%;
+    min-height: 50px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 10px;
+    font-family: inherit;
+    font-size: 14px;
+    resize: vertical;
+    direction: rtl;
+  }
+  .chief-notes:focus { border-color: #7b1fa2; outline: none; box-shadow: 0 0 0 3px rgba(123,31,162,0.1); }
+
+  /* Save Bar */
+  .save-bar {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .save-btn {
+    padding: 10px 24px;
+    border-radius: 10px;
+    border: none;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s;
+  }
+  .save-btn:active { transform: scale(0.97); }
+  .btn-primary { background: #7b1fa2; color: white; }
+  .btn-primary:hover { background: #6a1b9a; }
+  .btn-secondary { background: #f5f5f5; color: #333; border: 1px solid #ddd; }
+  .btn-secondary:hover { background: #e0e0e0; }
+  .btn-export { background: #34a853; color: white; }
+  .btn-export:hover { background: #2e7d32; }
+
+  /* Summary Section */
+  .summary-section {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    display: none;
+  }
+  .summary-section.visible { display: block; }
+  .summary-text {
+    background: #f5f5f5;
+    border-radius: 8px;
+    padding: 16px;
+    font-size: 14px;
+    white-space: pre-wrap;
+    direction: rtl;
+    max-height: 500px;
+    overflow-y: auto;
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #333;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-size: 14px;
+    z-index: 9999;
+    display: none;
+  }
+  .toast.show { display: block; animation: fadeInUp 0.3s ease; }
+  @keyframes fadeInUp { from { opacity: 0; transform: translateX(-50%) translateY(10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .stats-grid { grid-template-columns: repeat(3, 1fr); }
+    .stat-num { font-size: 22px; }
+    .examiner-table { font-size: 11px; }
+    .decision-buttons { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>📋 סיכום בדיקת שאלות תאוריה</h1>
+  <div class="subtitle">סקירת רב בוחן - דרגות C1 + C</div>
+  <div class="date">תאריך הפקה: 5.3.2026</div>
+</div>
+
+<!-- Stats Dashboard -->
+<div class="dashboard">
+  <h2>📊 סיכום כללי</h2>
+  <div class="stats-grid">
+    <div class="stat-box stat-total"><div class="stat-num">2566</div><div class="stat-label">סה"כ שאלות</div></div>
+    <div class="stat-box stat-ok"><div class="stat-num">2496</div><div class="stat-label">תקינות</div></div>
+    <div class="stat-box stat-problem"><div class="stat-num">54</div><div class="stat-label">בעייתיות</div></div>
+    <div class="stat-box stat-irrelevant"><div class="stat-num">14</div><div class="stat-label">לא רלוונטיות</div></div>
+    <div class="stat-box stat-review"><div class="stat-num">68</div><div class="stat-label">לבדיקה</div></div>
+  </div>
+</div>
+
+<!-- Examiner Table -->
+<div class="examiner-table-container">
+  <h2>👥 סיכום לפי בוחן</h2>
+  <table class="examiner-table">
+    <thead>
+      <tr>
+        <th>בוחן</th>
+        <th>נושא</th>
+        <th>סה"כ</th>
+        <th>נבדקו</th>
+        <th>תקין</th>
+        <th>בעייתי</th>
+        <th>לא רלו'</th>
+        <th>הערות כלליות</th>
+      </tr>
+    </thead>
+    <tbody>
+      
+  <tr>
+    <td><strong>אלבלה אברהם</strong></td>
+    <td>חוק כללי - חלק א'</td>
+    <td>471</td>
+    <td>471</td>
+    <td class="td-ok">465</td>
+    <td class="td-problem">5</td>
+    <td class="td-irrelevant">1</td>
+    <td class="td-notes">ישנם הרבה שאלות שחוזרות על עצמם</td>
+  </tr>
+
+  <tr>
+    <td><strong>שמשון נגאוקר</strong></td>
+    <td>חוק כללי - חלק ב'</td>
+    <td>471</td>
+    <td>471</td>
+    <td class="td-ok">447</td>
+    <td class="td-problem">23</td>
+    <td class="td-irrelevant">1</td>
+    <td class="td-notes">---</td>
+  </tr>
+
+  <tr>
+    <td><strong>אלכס קורנבליט</strong></td>
+    <td>תמרורים כללי - חלק א'</td>
+    <td>356</td>
+    <td>355</td>
+    <td class="td-ok">349</td>
+    <td class="td-problem">5</td>
+    <td class="td-irrelevant">1</td>
+    <td class="td-notes">---</td>
+  </tr>
+
+  <tr>
+    <td><strong>שרון צרימי</strong></td>
+    <td>תמרורים כללי - חלק ב'</td>
+    <td>355</td>
+    <td>354</td>
+    <td class="td-ok">336</td>
+    <td class="td-problem">12</td>
+    <td class="td-irrelevant">6</td>
+    <td class="td-notes">ישנם מספר שאלות החוזרות על עצמן, כלומר על תמרור ספציפי ישנן 3 שאלות במקום זה אפשר להכניס שאלות אחרות על תמרורים אחרים. וכדאי יותר להתמקד בשאלות לתמרורים הרלוונטיים לדרגת המבחן של משא קל ומשא כבד. לוח התמרורים לא תמיד מספק תשובות לשאלות של מי שכבר מכיר את לוח התמרורים בצורה מקצועית</td>
+  </tr>
+
+  <tr>
+    <td><strong>יניר נאוגאוקר</strong></td>
+    <td>בטיחות כללי - חלק א'</td>
+    <td>297</td>
+    <td>297</td>
+    <td class="td-ok">292</td>
+    <td class="td-problem">5</td>
+    <td class="td-irrelevant">0</td>
+    <td class="td-notes">עבודה מצויינת ומבורכת ויטלי היקר</td>
+  </tr>
+
+  <tr>
+    <td><strong>דוד פלס</strong></td>
+    <td>בטיחות כללי - חלק ב'</td>
+    <td>296</td>
+    <td>296</td>
+    <td class="td-ok">293</td>
+    <td class="td-problem">3</td>
+    <td class="td-irrelevant">0</td>
+    <td class="td-notes">השאלות ברמה טובה מאוד..</td>
+  </tr>
+
+  <tr>
+    <td><strong>בנימין לוי</strong></td>
+    <td>הכרת הרכב + שאלות ספציפיות</td>
+    <td>320</td>
+    <td>320</td>
+    <td class="td-ok">314</td>
+    <td class="td-problem">1</td>
+    <td class="td-irrelevant">5</td>
+    <td class="td-notes">---</td>
+  </tr>
+
+      <tr style="font-weight:700; background:#f0e6f6;">
+        <td colspan="2">סה"כ</td>
+        <td>2566</td>
+        <td>2564</td>
+        <td class="td-ok">2496</td>
+        <td class="td-problem">54</td>
+        <td class="td-irrelevant">14</td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Save Bar -->
+<div class="save-bar">
+  <button class="save-btn btn-export" onclick="generateSummary()">📊 הפק סיכום החלטות</button>
+  <button class="save-btn btn-primary" onclick="copySummary()">📋 העתק סיכום ללוח</button>
+  <button class="save-btn btn-secondary" onclick="copyState()">💾 שמור מצב</button>
+  <button class="save-btn btn-secondary" onclick="loadState()">📂 טען מצב</button>
+</div>
+
+<!-- Progress -->
+<div class="progress-container">
+  <div class="progress-info">
+    <span>התקדמות בדיקה</span>
+    <span id="progress-pct">0%</span>
+  </div>
+  <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+  <div class="progress-counts">
+    <span><span class="dot dot-keep"></span> להשאיר: <strong id="cnt-keep">0</strong></span>
+    <span><span class="dot dot-fix"></span> לתקן: <strong id="cnt-fix">0</strong></span>
+    <span><span class="dot dot-remove"></span> להסיר: <strong id="cnt-remove">0</strong></span>
+    <span><span class="dot dot-dup"></span> כפולה: <strong id="cnt-dup">0</strong></span>
+    <span><span class="dot dot-pending"></span> טרם נבדקו: <strong id="cnt-pending">68</strong></span>
+  </div>
+</div>
+
+<!-- Filter Buttons -->
+<div class="filter-bar">
+  <button class="filter-btn active" onclick="filterItems('all', this)">הכל (68)</button>
+  <button class="filter-btn" onclick="filterItems('pending', this)">⏳ טרם נבדקו</button>
+  <button class="filter-btn" onclick="filterItems('keep', this)">✅ להשאיר</button>
+  <button class="filter-btn" onclick="filterItems('fix', this)">🔧 לתקן</button>
+  <button class="filter-btn" onclick="filterItems('remove', this)">🗑️ להסיר</button>
+  <button class="filter-btn" onclick="filterItems('duplicate', this)">🔄 כפולה</button>
+</div>
+
+<!-- Issue Categories -->
+<div class="category-section" id="cat-duplicate">
+    <div class="category-header" onclick="toggleCategory('duplicate')">
+      <span class="cat-icon">🔄</span>
+      <span class="cat-title">שאלות כפולות / חוזרות</span>
+      <span class="cat-count">13</span>
+      <span class="cat-toggle" id="toggle-duplicate">▼</span>
+    </div>
+    <div class="category-items" id="items-duplicate"><div class="issue-card" data-index="0" data-id="66">
+      <div class="issue-header">
+        <span class="issue-num">#1</span>
+        <span class="issue-meta">ID: 66 | דרגה: D | חוק כללי D רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>אלבלה אברהם</strong> (חוק כללי - חלק א')</div>
+        <div class="examiner-type">❌ סומנה כבעייתית</div>
+        <div class="examiner-note">חוזר על עצמו</div>
+      </div>
+      <div class="no-image">אין תמונה לשאלה זו</div>
+      <div class="q-text">Обязательно ли подчиняться указаниям военного полицейского, даже если указание или сигнал противоречат дорожным знакам?</div>
+      <div class="answers"><div class="answer ">א. Нет, нет обязанности подчиняться.</div>
+<div class="answer ">ב. Да, за исключением указания, противоречащего знаку «Въезд запрещен».</div>
+<div class="answer correct">ג. Да, обязательно подчиняться, соблюдая при этом особую осторожность. ✅</div>
+<div class="answer ">ד. Да, за исключением указания, противоречащего знаку «Остановитесь» (Стоп).</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-0" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-0" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-0" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-0" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-0" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div><div class="issue-card" data-index="1" data-id="223">
+      <div class="issue-header">
+        <span class="issue-num">#2</span>
+        <span class="issue-meta">ID: 223 | דרגה: D | חוק כללי D רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>שמשון נגאוקר</strong> (חוק כללי - חלק ב')</div>
+        <div class="examiner-type">❌ סומנה כבעייתית</div>
+        <div class="examiner-note">השאלה הזאת הייתה כבר</div>
+      </div>
+      <div class="no-image">אין תמונה לשאלה זו</div>
+      <div class="q-text">Каково максимальное расстояние от тротуара, на котором разрешено ставить транспортное средство параллельно краю проезжей части?</div>
+      <div class="answers"><div class="answer ">א. 60 сантиметров.</div>
+<div class="answer correct">ב. 40 сантиметров. ✅</div>
+<div class="answer ">ג. 70 сантиметров.</div>
+<div class="answer ">ד. 50 сантиметров.</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-1" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-1" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-1" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-1" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-1" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div><div class="issue-card" data-index="2" data-id="244">
+      <div class="issue-header">
+        <span class="issue-num">#3</span>
+        <span class="issue-meta">ID: 244 | דרגה: D | חוק כללי D רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>שמשון נגאוקר</strong> (חוק כללי - חלק ב')</div>
+        <div class="examiner-type">❌ סומנה כבעייתית</div>
+        <div class="examiner-note">השאלה הזאת הייתה כבר</div>
+      </div>
+      <div class="no-image">אין תמונה לשאלה זו</div>
+      <div class="q-text">Парковка под углом на дороге:</div>
+      <div class="answers"><div class="answer ">א. Запрещена, кроме скутеров и мотоциклов.</div>
+<div class="answer correct">ב. Разрешена, когда для этого имеется специальная разметка. ✅</div>
+<div class="answer ">ג. Разрешена только на широкой дороге.</div>
+<div class="answer ">ד. Запрещена, кроме транспортных средств длиной три с половиной метра или менее.</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-2" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-2" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-2" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-2" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-2" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div><div class="issue-card" data-index="3" data-id="260">
+      <div class="issue-header">
+        <span class="issue-num">#4</span>
+        <span class="issue-meta">ID: 260 | דרגה: D | חוק ספציפי D רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>שמשון נגאוקר</strong> (חוק כללי - חלק ב')</div>
+        <div class="examiner-type">❌ סומנה כבעייתית</div>
+        <div class="examiner-note">השאלה חוזרת על עצמה..</div>
+      </div>
+      <div class="no-image">אין תמונה לשאלה זו</div>
+      <div class="q-text">Когда разрешено включать «противотуманные фары»?</div>
+      <div class="answers"><div class="answer ">א. Только при движении по автомагистрали.</div>
+<div class="answer ">ב. Только когда идет дождь.</div>
+<div class="answer correct">ג. Только при наличии тумана, сильного дождя или снегопада. ✅</div>
+<div class="answer ">ד. Только при движении задним ходом.</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-3" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-3" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-3" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-3" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-3" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div><div class="issue-card" data-index="4" data-id="261">
+      <div class="issue-header">
+        <span class="issue-num">#5</span>
+        <span class="issue-meta">ID: 261 | דרגה: D | חוק ספציפי D רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>שמשון נגאוקר</strong> (חוק כללי - חלק ב')</div>
+        <div class="examiner-type">❌ סומנה כבעייתית</div>
+        <div class="examiner-note">השאלה חוזרת על עצמה...</div>
+      </div>
+      <div class="no-image">אין תמונה לשאלה זו</div>
+      <div class="q-text">Когда разрешено использовать «фонарь заднего хода»?</div>
+      <div class="answers"><div class="answer ">א. Во время тумана или сильного дождя.</div>
+<div class="answer ">ב. Во время парковки на крытой стоянке.</div>
+<div class="answer correct">ג. Только при движении задним ходом и при включенной задней передаче. ✅</div>
+<div class="answer ">ד. Когда видимость ограничена по любой причине.</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-4" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-4" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-4" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-4" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-4" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div><div class="issue-card" data-index="5" data-id="271">
+      <div class="issue-header">
+        <span class="issue-num">#6</span>
+        <span class="issue-meta">ID: 271 | דרגה: C1 | חוק C1 כללי רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>שמשון נגאוקר</strong> (חוק כללי - חלק ב')</div>
+        <div class="examiner-type">❌ סומנה כבעייתית</div>
+        <div class="examiner-note">השאלה חוזרת על עצמה</div>
+      </div>
+      <div class="no-image">אין תמונה לשאלה זו</div>
+      <div class="q-text">Водительские права «нового водителя» не будут продлены в качестве обычных водительских прав, если он был осужден судом за правонарушение, связанное с:</div>
+      <div class="answers"><div class="answer ">א. Поездкой на механическом транспортном средстве без действующей страховки.</div>
+<div class="answer ">ב. Невыполнением требования остановиться на перекрестке, где установлен знак «Уступите дорогу пересекающему транспортному средству».</div>
+<div class="answer ">ג. Невыставлением знака аварийной остановки (треугольника) при остановке автомобиля на дороге из-за поломки.</div>
+<div class="answer correct">ד. Управлением механическим транспортным средством под воздействием алкоголя или опьяняющих наркотиков. ✅</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-5" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-5" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-5" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-5" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-5" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div><div class="issue-card" data-index="6" data-id="286">
+      <div class="issue-header">
+        <span class="issue-num">#7</span>
+        <span class="issue-meta">ID: 286 | דרגה: D | חוק כללי D רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>שמשון נגאוקר</strong> (חוק כללי - חלק ב')</div>
+        <div class="examiner-type">❌ סומנה כבעייתית</div>
+        <div class="examiner-note">השאלה הזאת הייתה כבר...</div>
+      </div>
+      <div class="no-image">אין תמונה לשאלה זו</div>
+      <div class="q-text">Как мы должны управлять автомобилем на спуске?</div>
+      <div class="answers"><div class="answer correct">א. Мы должны убедиться, что одна из передач включена и задействована. ✅</div>
+<div class="answer ">ב. На высокой передаче и с непрерывным нажатием на педаль тормоза для повышения безопасности.</div>
+<div class="answer ">ג. На холостом ходу (нейтральной передаче), чтобы сэкономить топливо.</div>
+<div class="answer ">ד. С включенной передачей и непрерывным нажатием на педаль сцепления.</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-6" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-6" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-6" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-6" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-6" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div><div class="issue-card" data-index="7" data-id="480">
+      <div class="issue-header">
+        <span class="issue-num">#8</span>
+        <span class="issue-meta">ID: 480 | דרגה: D | חוק כללי D רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>שמשון נגאוקר</strong> (חוק כללי - חלק ב')</div>
+        <div class="examiner-type">❌ סומנה כבעייתית</div>
+        <div class="examiner-note">השאלה חוזרת על עצמה...</div>
+      </div>
+      <div class="no-image">אין תמונה לשאלה זו</div>
+      <div class="q-text">При движении вблизи группы детей водитель обязан:</div>
+      <div class="answers"><div class="answer correct">א. Снизить скорость, быть готовым к остановке и при необходимости – остановиться. ✅</div>
+<div class="answer ">ב. Полностью остановиться, пока дети находятся рядом с дорогой.</div>
+<div class="answer ">ג. Продолжать движение с обычной скоростью при условии, что тротуары широкие.</div>
+<div class="answer ">ד. Продолжать движение с обычной скоростью при условии подачи звукового сигнала для предупреждения.</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-7" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-7" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-7" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-7" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-7" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div><div class="issue-card" data-index="8" data-id="653">
+      <div class="issue-header">
+        <span class="issue-num">#9</span>
+        <span class="issue-meta">ID: 653 | דרגה: C1 | חוק C1 כללי רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>שמשון נגאוקר</strong> (חוק כללי - חלק ב')</div>
+        <div class="examiner-type">❌ סומנה כבעייתית</div>
+        <div class="examiner-note">שאלה חוזרת על עצמה..</div>
+      </div>
+      <div class="q-image"><img src="https://www.gov.il/BlobFolder/generalpage/tq_pic_01/he/TQ_PIC_31688.jpg" alt="תמונת שאלה" loading="lazy" onerror="this.parentElement.innerHTML='<span class=\'img-error\'>⚠️ התמונה לא נטענה</span>'"></div>
+      <div class="q-text">«Новый водитель», не достигший 21 года, не должен перевозить в частном пассажирском транспортном средстве:</div>
+      <div class="answers"><div class="answer ">א. Более четырех пассажиров, кроме него самого, если рядом с ним не сидит сопровождающий.</div>
+<div class="answer correct">ב. Более двух пассажиров, кроме него самого, если рядом с ним не сидит сопровождающий. ✅</div>
+<div class="answer ">ג. Ни одного пассажира, пока он является «новым водителем».</div>
+<div class="answer ">ד. Более одного пассажира, кроме него самого, если рядом с ним не сидит сопровождающий.</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-8" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-8" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-8" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-8" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-8" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div><div class="issue-card" data-index="9" data-id="734">
+      <div class="issue-header">
+        <span class="issue-num">#10</span>
+        <span class="issue-meta">ID: 734 | דרגה: D | חוק כללי D רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>שמשון נגאוקר</strong> (חוק כללי - חלק ב')</div>
+        <div class="examiner-type">❌ סומנה כבעייתית</div>
+        <div class="examiner-note">שאלה חוזרת על עצמה</div>
+      </div>
+      <div class="no-image">אין תמונה לשאלה זו</div>
+      <div class="q-text">Где должен храниться светоотражающий жилет в автомобиле (кроме мотоцикла)?</div>
+      <div class="answers"><div class="answer ">א. В моторном отсеке автомобиля.</div>
+<div class="answer ">ב. В багажнике автомобиля.</div>
+<div class="answer correct">ג. В салоне автомобиля. ✅</div>
+<div class="answer ">ד. Рядом с запасным колесом (запаской).</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-9" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-9" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-9" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-9" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-9" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div><div class="issue-card" data-index="10" data-id="795">
+      <div class="issue-header">
+        <span class="issue-num">#11</span>
+        <span class="issue-meta">ID: 795 | דרגה: D | חוק כללי D רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>שמשון נגאוקר</strong> (חוק כללי - חלק ב')</div>
+        <div class="examiner-type">❌ סומנה כבעייתית</div>
+        <div class="examiner-note">השאלה חוזרת על עצמה...</div>
+      </div>
+      <div class="no-image">אין תמונה לשאלה זו</div>
+      <div class="q-text">Выберите правильное утверждение: Закон запрещает водителю выполнять разворот влево:</div>
+      <div class="answers"><div class="answer ">א. В месте, где транспортное средство не видно другому водителю, приближающемуся с любой стороны.</div>
+<div class="answer ">ב. Когда установлен знак, запрещающий разворот.</div>
+<div class="answer ">ג. При приближении к крутой вершине или к повороту дороги.</div>
+<div class="answer correct">ד. Все ответы верны. ✅</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-10" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-10" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-10" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-10" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-10" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div><div class="issue-card" data-index="11" data-id="90">
+      <div class="issue-header">
+        <span class="issue-num">#12</span>
+        <span class="issue-meta">ID: 90 | דרגה: D | חוק כללי D רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>שמשון נגאוקר</strong> (חוק כללי - חלק ב')</div>
+        <div class="examiner-type">❌ סומנה כבעייתית</div>
+        <div class="examiner-note">שאלה חוזרת על עצמה</div>
+      </div>
+      <div class="no-image">אין תמונה לשאלה זו</div>
+      <div class="q-text">Вы едете по дороге с односторонним движением, и перед вами сооружение, столб или закрытая зона. Как следует проехать?</div>
+      <div class="answers"><div class="answer ">א. Проезжать место только справа.</div>
+<div class="answer ">ב. На городской дороге можно проехать справа или слева; на дороге, не являющейся городской, — всегда справа.</div>
+<div class="answer correct">ג. Вам разрешено проехать это место с правой или с левой стороны, если не обозначено иное. ✅</div>
+<div class="answer ">ד. Проезжать место слева.</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-11" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-11" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-11" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-11" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-11" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div><div class="issue-card" data-index="12" data-id="1563">
+      <div class="issue-header">
+        <span class="issue-num">#13</span>
+        <span class="issue-meta">ID: 1563 | דרגה: D | בטיחות כללי D רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>יניר נאוגאוקר</strong> (בטיחות כללי - חלק א')</div>
+        <div class="examiner-type">❌ סומנה כבעייתית</div>
+        <div class="examiner-note">שאלה תואמת את 48. נוסח תשובות שונה</div>
+      </div>
+      <div class="no-image">אין תמונה לשאלה זו</div>
+      <div class="q-text">Когда солнце ослепляет водителя автомобиля, он должен:</div>
+      <div class="answers"><div class="answer ">א. Обогнать едущий впереди автомобиль, так как лучше ехать по свободной дороге.</div>
+<div class="answer correct">ב. Замедлить движение и адаптировать скорость к имеющемуся полю зрения. ✅</div>
+<div class="answer ">ג. Отвести взгляд в сторону и не смотреть вперед.</div>
+<div class="answer ">ד. Ускорить движение, пока не доедет до затененного места.</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-12" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-12" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-12" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-12" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-12" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div></div></div><div class="category-section" id="cat-wording">
+    <div class="category-header" onclick="toggleCategory('wording')">
+      <span class="cat-icon">✏️</span>
+      <span class="cat-title">בעיות ניסוח</span>
+      <span class="cat-count">11</span>
+      <span class="cat-toggle" id="toggle-wording">▼</span>
+    </div>
+    <div class="category-items" id="items-wording"><div class="issue-card" data-index="13" data-id="1682">
+      <div class="issue-header">
+        <span class="issue-num">#14</span>
+        <span class="issue-meta">ID: 1682 | דרגה: D | חוק כללי D רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>אלבלה אברהם</strong> (חוק כללי - חלק א')</div>
+        <div class="examiner-type">❌ סומנה כבעייתית</div>
+        <div class="examiner-note">להוסיף למעט טרקטור אופנוע</div>
+      </div>
+      <div class="no-image">אין תמונה לשאלה זו</div>
+      <div class="q-text">В каком транспортном средстве обязательно должен находиться светоотражающий жилет?</div>
+      <div class="answers"><div class="answer ">א. Закон не регламентирует место его хранения.</div>
+<div class="answer ">ב. В любом механическом транспортном средстве, а также в немеханическом транспортном средстве.</div>
+<div class="answer ">ג. В любом механическом транспортном средстве.</div>
+<div class="answer correct">ד. В любом механическом транспортном средстве, кроме трактора и мотоцикла. ✅</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-13" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-13" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-13" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-13" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-13" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div><div class="issue-card" data-index="14" data-id="170">
+      <div class="issue-header">
+        <span class="issue-num">#15</span>
+        <span class="issue-meta">ID: 170 | דרגה: D | חוק כללי D רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>אלבלה אברהם</strong> (חוק כללי - חלק א')</div>
+        <div class="examiner-type">❌ סומנה כבעייתית</div>
+        <div class="examiner-note">אולי להגדיר במצב סכנה או למניעת תאונות</div>
+      </div>
+      <div class="no-image">אין תמונה לשאלה זו</div>
+      <div class="q-text">При подаче сигнала с помощью звукового сигнала (клаксона):</div>
+      <div class="answers"><div class="answer correct">א. Сигнал не должен быть более длительным, чем это необходимо. ✅</div>
+<div class="answer ">ב. Сигнал должен подаваться в быстром и равномерном ритме.</div>
+<div class="answer ">ג. Сигнал должен подаваться посредством длинного и непрерывного гудка.</div>
+<div class="answer ">ד. Закон требует по крайней мере трех гудков.</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-14" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-14" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-14" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-14" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-14" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div><div class="issue-card" data-index="15" data-id="286">
+      <div class="issue-header">
+        <span class="issue-num">#16</span>
+        <span class="issue-meta">ID: 286 | דרגה: D | חוק כללי D רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>אלבלה אברהם</strong> (חוק כללי - חלק א')</div>
+        <div class="examiner-type">❌ סומנה כבעייתית</div>
+        <div class="examiner-note">אולי ניתן להוסיף בהילוך נמוך</div>
+      </div>
+      <div class="no-image">אין תמונה לשאלה זו</div>
+      <div class="q-text">Как мы должны управлять автомобилем на спуске?</div>
+      <div class="answers"><div class="answer correct">א. Мы должны убедиться, что одна из передач включена и задействована. ✅</div>
+<div class="answer ">ב. На высокой передаче и с непрерывным нажатием на педаль тормоза для повышения безопасности.</div>
+<div class="answer ">ג. На холостом ходу (нейтральной передаче), чтобы сэкономить топливо.</div>
+<div class="answer ">ד. С включенной передачей и непрерывным нажатием на педаль сцепления.</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-15" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-15" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-15" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-15" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-15" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div><div class="issue-card" data-index="16" data-id="1395">
+      <div class="issue-header">
+        <span class="issue-num">#17</span>
+        <span class="issue-meta">ID: 1395 | דרגה: D | חוק כללי D רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>שמשון נגאוקר</strong> (חוק כללי - חלק ב')</div>
+        <div class="examiner-type">❌ סומנה כבעייתית</div>
+        <div class="examiner-note">למה לא להוסיף בהילוך נמוך?</div>
+      </div>
+      <div class="no-image">אין תמונה לשאלה זו</div>
+      <div class="q-text">Как следует управлять автомобилем на спуске?</div>
+      <div class="answers"><div class="answer ">א. На холостом ходу, для экономии топлива.</div>
+<div class="answer ">ב. С включенной передачей и постоянным нажатием на педаль сцепления.</div>
+<div class="answer correct">ג. Обязательно должна быть включена одна из передач. ✅</div>
+<div class="answer ">ד. На высокой передаче и при постоянном нажатии на педаль тормоза.</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-16" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-16" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-16" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-16" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-16" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div><div class="issue-card" data-index="17" data-id="215">
+      <div class="issue-header">
+        <span class="issue-num">#18</span>
+        <span class="issue-meta">ID: 215 | דרגה: D | תמרורים כללי D רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>אלכס קורנבליט</strong> (תמרורים כללי - חלק א')</div>
+        <div class="examiner-type">❌ סומנה כבעייתית</div>
+        <div class="examiner-note">יש להוסיף פרט להעלאת והורדת נוסעים.</div>
+      </div>
+      <div class="q-image"><img src="https://www.gov.il/BlobFolder/generalpage/tq_pic_01/he/TQ_PIC_3215.jpg" alt="תמונת שאלה" loading="lazy" onerror="this.parentElement.innerHTML='<span class=\'img-error\'>⚠️ התמונה לא נטענה</span>'"></div>
+      <div class="q-text">Разрешено ли ставить транспортное средство, не являющееся такси, в месте, где установлен этот знак?</div>
+      <div class="answers"><div class="answer ">א. Запрещено при любых условиях.</div>
+<div class="answer ">ב. Разрешено, если такси не паркуются в этом месте.</div>
+<div class="answer ">ג. Разрешено только для посадки пассажиров.</div>
+<div class="answer correct">ד. Запрещено, за исключением остановки для высадки и посадки пассажиров. ✅</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-17" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-17" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-17" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-17" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-17" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div><div class="issue-card" data-index="18" data-id="501">
+      <div class="issue-header">
+        <span class="issue-num">#19</span>
+        <span class="issue-meta">ID: 501 | דרגה: D | תמרורים כללי D רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>שרון צרימי</strong> (תמרורים כללי - חלק ב')</div>
+        <div class="examiner-type">❌ סומנה כבעייתית</div>
+        <div class="examiner-note">מי יודע מהו רכב צידי. היה כדאי לכתוב למעט רכב דו גלגלי.</div>
+      </div>
+      <div class="q-image"><img src="https://www.gov.il/BlobFolder/generalpage/tq_pic_01/he/TQ_PIC_3501.jpg" alt="תמונת שאלה" loading="lazy" onerror="this.parentElement.innerHTML='<span class=\'img-error\'>⚠️ התמונה לא נטענה</span>'"></div>
+      <div class="q-text">Что означает этот дорожный знак?</div>
+      <div class="answers"><div class="answer ">א. Въезд частным автомобилям запрещен.</div>
+<div class="answer correct">ב. Въезд механическим транспортным средствам запрещён, кроме двухколёсных транспортных средств. ✅</div>
+<div class="answer ">ג. Стоянка всех транспортных средств запрещена.</div>
+<div class="answer ">ד. Въезд всем транспортным средствам запрещен, кроме частных пассажирских автомобилей.</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-18" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-18" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-18" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-18" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-18" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div><div class="issue-card" data-index="19" data-id="763">
+      <div class="issue-header">
+        <span class="issue-num">#20</span>
+        <span class="issue-meta">ID: 763 | דרגה: D | בטיחות כללי D רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>יניר נאוגאוקר</strong> (בטיחות כללי - חלק א')</div>
+        <div class="examiner-type">❌ סומנה כבעייתית</div>
+        <div class="examiner-note">ניסוח תשובה.(בשים לב) שלא יהיו שאלות מיותרות כמו מה הפירוש. אז אפשר רק להוריד את שני המילים האלה</div>
+      </div>
+      <div class="no-image">אין תמונה לשאלה זו</div>
+      <div class="q-text">Как выполнить переход с одной полосы на другую?</div>
+      <div class="answers"><div class="answer ">א. Мы приблизимся как можно ближе к желаемой полосе, и когда за нами не будет ехать ни один автомобиль, подадим сигнал указателем поворота и перестроимся на целевую полосу по короткой диагонали.</div>
+<div class="answer ">ב. Мы перестроимся быстро, по короткой диагонали и решительно, убедившись, что включили сигнал указателем поворота.</div>
+<div class="answer ">ג. Мы подадим сигнал указателем поворота и перестроимся по короткой диагонали на целевую полосу.</div>
+<div class="answer correct">ד. Переход будет выполнен после проверки и принимая во внимание расположение и скорость других транспортных средств, находящихся на целевой полосе. ✅</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-19" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-19" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-19" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-19" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-19" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div><div class="issue-card" data-index="20" data-id="900">
+      <div class="issue-header">
+        <span class="issue-num">#21</span>
+        <span class="issue-meta">ID: 900 | דרגה: D | בטיחות כללי D רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>יניר נאוגאוקר</strong> (בטיחות כללי - חלק א')</div>
+        <div class="examiner-type">❌ סומנה כבעייתית</div>
+        <div class="examiner-note">אפשר לשנות נוסח תשובה לפי צבע הרכב. התשובה בסדר גמור. אולי כדי לשלול שאלות מיותרות של התלמידים</div>
+      </div>
+      <div class="q-image"><img src="https://www.gov.il/BlobFolder/generalpage/tq_pic_02/he/TQ_PIC_3900.jpg" alt="תמונת שאלה" loading="lazy" onerror="this.parentElement.innerHTML='<span class=\'img-error\'>⚠️ התמונה לא נטענה</span>'"></div>
+      <div class="q-text">Какой из изображенных на снимке автомобилей припаркован неправильно?</div>
+      <div class="answers"><div class="answer ">א. Оба припаркованы с нарушением требований закона.</div>
+<div class="answer correct">ב. Автомобиль, припаркованный перед пешеходным переходом. ✅</div>
+<div class="answer ">ג. Автомобиль, припаркованный сразу за пешеходным переходом.</div>
+<div class="answer ">ד. Оба автомобиля припаркованы по закону.</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-20" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-20" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-20" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-20" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-20" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div><div class="issue-card" data-index="21" data-id="1481">
+      <div class="issue-header">
+        <span class="issue-num">#22</span>
+        <span class="issue-meta">ID: 1481 | דרגה: D | בטיחות כללי D רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>דוד פלס</strong> (בטיחות כללי - חלק ב')</div>
+        <div class="examiner-type">❌ סומנה כבעייתית</div>
+        <div class="examiner-note">הנוסח של השאלה צריך להיות טיפה שונה. כיצד ניתן להקטין את הכוח הצנטריפוגלי הפועל על הרכב בעת הנסיעה?</div>
+      </div>
+      <div class="no-image">אין תמונה לשאלה זו</div>
+      <div class="q-text">Как можно уменьшить центробежную силу, действующую на автомобиль при движении по кривой (повороту)?</div>
+      <div class="answers"><div class="answer ">א. Невозможно уменьшить эту силу – она зависит от размера автомобиля.</div>
+<div class="answer correct">ב. Путем снижения скорости движения на поворотах и кривых. ✅</div>
+<div class="answer ">ג. Путем увеличения скорости движения.</div>
+<div class="answer ">ד. Путем езды по правилам и предоставления права преимущественного проезда всегда.</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-21" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-21" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-21" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-21" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-21" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div><div class="issue-card" data-index="22" data-id="1529">
+      <div class="issue-header">
+        <span class="issue-num">#23</span>
+        <span class="issue-meta">ID: 1529 | דרגה: D | בטיחות כללי D רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>דוד פלס</strong> (בטיחות כללי - חלק ב')</div>
+        <div class="examiner-type">❌ סומנה כבעייתית</div>
+        <div class="examiner-note">תיקון קטן בנוסח השאלה. כיצד תנהג ברכב בכביש רטוב?</div>
+      </div>
+      <div class="no-image">אין תמונה לשאלה זו</div>
+      <div class="q-text">Как следует вести автомобиль на мокрой дороге?</div>
+      <div class="answers"><div class="answer ">א. Периодически нажимайте на педаль сцепления.</div>
+<div class="answer ">ב. Как на сухой дороге. Разницы нет.</div>
+<div class="answer ">ג. Увеличьте скорость до окончания мокрого участка – для повышения безопасности.</div>
+<div class="answer correct">ד. Снизьте скорость и ведите автомобиль с подходящей скоростью, в соответствии с обстоятельствами. ✅</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-22" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-22" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-22" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-22" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-22" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div><div class="issue-card" data-index="23" data-id="309">
+      <div class="issue-header">
+        <span class="issue-num">#24</span>
+        <span class="issue-meta">ID: 309 | דרגה: D | בטיחות כללי D רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>דוד פלס</strong> (בטיחות כללי - חלק ב')</div>
+        <div class="examiner-type">❌ סומנה כבעייתית</div>
+        <div class="examiner-note">יש לפתוח רווח בשאלה בין המילים. אלכוהלי מסוג..</div>
+      </div>
+      <div class="no-image">אין תמונה לשאלה זו</div>
+      <div class="q-text">&quot;Разрешено водить машину, если выпит алкогольный напиток только одного вида, без смешивания разных видов&quot;: верно или нет?</div>
+      <div class="answers"><div class="answer ">א. Верно. Алкоголь влияет на вождение только при смешивании напитков разных видов.</div>
+<div class="answer ">ב. Верно. Нужно стараться не смешивать напитки разных видов перед вождением.</div>
+<div class="answer correct">ג. Неверно. Решающим фактором является уровень алкоголя в крови по отношению к уровню, установленному законом. ✅</div>
+<div class="answer ">ד. Верно. Можно выпить много порций опьяняющего напитка одного вида и не опьянеть.</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-23" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-23" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-23" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-23" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-23" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div></div></div><div class="category-section" id="cat-content">
+    <div class="category-header" onclick="toggleCategory('content')">
+      <span class="cat-icon">❓</span>
+      <span class="cat-title">בעיות תוכן / תשובה</span>
+      <span class="cat-count">7</span>
+      <span class="cat-toggle" id="toggle-content">▼</span>
+    </div>
+    <div class="category-items" id="items-content"><div class="issue-card" data-index="24" data-id="1338">
+      <div class="issue-header">
+        <span class="issue-num">#25</span>
+        <span class="issue-meta">ID: 1338 | דרגה: D | חוק ספציפי D רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>שמשון נגאוקר</strong> (חוק כללי - חלק ב')</div>
+        <div class="examiner-type">❌ סומנה כבעייתית</div>
+        <div class="examiner-note">אני לא בטוח שזה נכון...</div>
+      </div>
+      <div class="no-image">אין תמונה לשאלה זו</div>
+      <div class="q-text">Как измеряется &quot;общая высота&quot; транспортного средства:</div>
+      <div class="answers"><div class="answer ">א. От высоты пола кузова до самой высокой точки грузовика.</div>
+<div class="answer correct">ב. От поверхности дороги до самой высокой точки транспортного средства, включая все его оборудование, когда транспортное средство не загружено. ✅</div>
+<div class="answer ">ג. От поверхности дороги до самой высокой точки транспортного средства, включая все его оборудование, когда оно загружено.</div>
+<div class="answer ">ד. От поверхности дороги до высоты крыши кабины водителя.</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-24" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-24" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-24" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-24" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-24" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div><div class="issue-card" data-index="25" data-id="1357">
+      <div class="issue-header">
+        <span class="issue-num">#26</span>
+        <span class="issue-meta">ID: 1357 | דרגה: C1 | חוק C1 כללי רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>שמשון נגאוקר</strong> (חוק כללי - חלק ב')</div>
+        <div class="examiner-type">❌ סומנה כבעייתית</div>
+        <div class="examiner-note">אין לי מושג........</div>
+      </div>
+      <div class="no-image">אין תמונה לשאלה זו</div>
+      <div class="q-text">Каковы требования к цепям, установленным между прицепом и тягачом?</div>
+      <div class="answers"><div class="answer ">א. Они должны обеспечивать заземление электрического заряда (статического электричества), накапливающегося в автомобиле во время движения.</div>
+<div class="answer ">ב. Толщина их звеньев должна быть не менее 12 мм.</div>
+<div class="answer ">ג. Они должны предотвращать образование угла 90 градусов (буквой «Г») между тягачом и прицепом.</div>
+<div class="answer correct">ד. Они должны позволять прицепу поворачиваться по отношению к тягачу не менее чем на 90 градусов. ✅</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-25" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-25" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-25" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-25" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-25" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div><div class="issue-card" data-index="26" data-id="152">
+      <div class="issue-header">
+        <span class="issue-num">#27</span>
+        <span class="issue-meta">ID: 152 | דרגה: C1 | חוק C1 כללי רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>שמשון נגאוקר</strong> (חוק כללי - חלק ב')</div>
+        <div class="examiner-type">❌ סומנה כבעייתית</div>
+        <div class="examiner-note">קצת בעייתי ומבלבל לדעתי...</div>
+      </div>
+      <div class="q-image"><img src="https://www.gov.il/BlobFolder/generalpage/tq_pic_01/he/TQ_PIC_3139.jpg" alt="תמונת שאלה" loading="lazy" onerror="this.parentElement.innerHTML='<span class=\'img-error\'>⚠️ התמונה לא נטענה</span>'"></div>
+      <div class="q-text">Какова максимально допустимая скорость движения частного пассажирского автомобиля (если не установлен дорожный знак, предписывающий иное)?</div>
+      <div class="answers"><div class="answer ">א. На городской дороге в соответствии с дорожными условиями, а на дороге, не являющейся городской — 100 км/ч.</div>
+<div class="answer ">ב. На городской дороге — 50 км/ч; на дороге, не являющейся городской — 70 км/ч.</div>
+<div class="answer ">ג. На городской дороге — 40 км/ч; на дороге, не являющейся городской — 80 км/ч.</div>
+<div class="answer correct">ד. На городской дороге — 50 км/ч; на дороге, не являющейся городской — 80 км/ч. ✅</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-26" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-26" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-26" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-26" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-26" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div><div class="issue-card" data-index="27" data-id="1684">
+      <div class="issue-header">
+        <span class="issue-num">#28</span>
+        <span class="issue-meta">ID: 1684 | דרגה: D | חוק כללי D רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>שמשון נגאוקר</strong> (חוק כללי - חלק ב')</div>
+        <div class="examiner-type">❌ סומנה כבעייתית</div>
+        <div class="examiner-note">אין לי מושג התשובה...</div>
+      </div>
+      <div class="no-image">אין תמונה לשאלה זו</div>
+      <div class="q-text">Автомобиль сломался на междугородней дороге. Водитель остановил его на правой обочине. Тротуара нет. Как следует использовать светоотражающий жилет?</div>
+      <div class="answers"><div class="answer ">א. Если в автомобиле есть два жилета, двум людям разрешается выйти, надев светоотражающие жилеты.</div>
+<div class="answer ">ב. Водитель, выходящий из автомобиля, освобожден от обязанности надевать жилет, если пассажир автомобиля надел жилет и вышел из автомобиля раньше него.</div>
+<div class="answer ">ג. Водитель, выходящий из автомобиля, должен надеть светоотражающий жилет при выходе из него.</div>
+<div class="answer correct">ד. Все ответы верны. ✅</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-27" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-27" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-27" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-27" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-27" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div><div class="issue-card" data-index="28" data-id="1792">
+      <div class="issue-header">
+        <span class="issue-num">#29</span>
+        <span class="issue-meta">ID: 1792 | דרגה: D | חוק כללי D רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>שמשון נגאוקר</strong> (חוק כללי - חלק ב')</div>
+        <div class="examiner-type">❌ סומנה כבעייתית</div>
+        <div class="examiner-note">לא יודע...</div>
+      </div>
+      <div class="no-image">אין תמונה לשאלה זו</div>
+      <div class="q-text">Закон разрешает ездить в дневное время летом:</div>
+      <div class="answers"><div class="answer correct">א. Все ответы неверны. ✅</div>
+<div class="answer ">ב. Когда фары автомобиля неисправны.</div>
+<div class="answer ">ג. Вообще без стеклоочистителей («дворников»).</div>
+<div class="answer ">ד. На шинах, глубина протектора которых менее одного миллиметра.</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-28" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-28" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-28" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-28" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-28" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div><div class="issue-card" data-index="29" data-id="1798">
+      <div class="issue-header">
+        <span class="issue-num">#30</span>
+        <span class="issue-meta">ID: 1798 | דרגה: D | חוק כללי D רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>שמשון נגאוקר</strong> (חוק כללי - חלק ב')</div>
+        <div class="examiner-type">❌ סומנה כבעייתית</div>
+        <div class="examiner-note">לא ברור</div>
+      </div>
+      <div class="no-image">אין תמונה לשאלה זו</div>
+      <div class="q-text">Где действует обязанность снизить скорость автомобиля?</div>
+      <div class="answers"><div class="answer ">א. При движении по междугородной дороге.</div>
+<div class="answer correct">ב. В зоне успокоения движения (Mithun Tnu'a). ✅</div>
+<div class="answer ">ג. При движении по междугородной дороге, имеющей конструктивно выделенную разделительную полосу.</div>
+<div class="answer ">ד. При движении по главным дорогам.</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-29" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-29" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-29" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-29" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-29" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div><div class="issue-card" data-index="30" data-id="1559">
+      <div class="issue-header">
+        <span class="issue-num">#31</span>
+        <span class="issue-meta">ID: 1559 | דרגה: D | בטיחות כללי D רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>יניר נאוגאוקר</strong> (בטיחות כללי - חלק א')</div>
+        <div class="examiner-type">❌ סומנה כבעייתית</div>
+        <div class="examiner-note">תראה בנוסף שאלה 49 תשובה קצת שונה</div>
+      </div>
+      <div class="no-image">אין תמונה לשאלה זו</div>
+      <div class="q-text">Когда солнце слепит водителя, он должен:</div>
+      <div class="answers"><div class="answer ">א. Обогнать впереди идущий автомобиль, так как лучше ехать по свободной дороге.</div>
+<div class="answer correct">ב. Снизить скорость в соответствии с дальностью видимости и использовать солнцезащитный козырек. ✅</div>
+<div class="answer ">ג. Отвернуть взгляд в сторону и не смотреть вперед, чтобы не быть ослепленным.</div>
+<div class="answer ">ד. Прижаться к впереди идущему автомобилю, чтобы он закрывал его от солнечных лучей.</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-30" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-30" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-30" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-30" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-30" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div></div></div><div class="category-section" id="cat-image">
+    <div class="category-header" onclick="toggleCategory('image')">
+      <span class="cat-icon">🖼️</span>
+      <span class="cat-title">תמונות חסרות / לא קשורות</span>
+      <span class="cat-count">3</span>
+      <span class="cat-toggle" id="toggle-image">▼</span>
+    </div>
+    <div class="category-items" id="items-image"><div class="issue-card" data-index="31" data-id="18">
+      <div class="issue-header">
+        <span class="issue-num">#32</span>
+        <span class="issue-meta">ID: 18 | דרגה: D | חוק כללי D רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>שמשון נגאוקר</strong> (חוק כללי - חלק ב')</div>
+        <div class="examiner-type">❌ סומנה כבעייתית</div>
+        <div class="examiner-note">התמונה לא קשורה...</div>
+      </div>
+      <div class="q-image"><img src="https://www.gov.il/BlobFolder/generalpage/tq_pic_01/he/TQ_PIC_3018.jpg" alt="תמונת שאלה" loading="lazy" onerror="this.parentElement.innerHTML='<span class=\'img-error\'>⚠️ התמונה לא נטענה</span>'"></div>
+      <div class="q-text">На изображении перед вами показан тротуар. Какое утверждение верно?</div>
+      <div class="answers"><div class="answer ">א. Частному пассажирскому автомобилю всегда разрешено припарковаться на мгновение на тротуаре, если на дороге нет места для парковки.</div>
+<div class="answer correct">ב. Тротуар предназначен только для пешеходов. ✅</div>
+<div class="answer ">ג. Мотоциклу также разрешено использовать тротуар вместо полос проезжей части.</div>
+<div class="answer ">ד. Велосипедистам также разрешено ездить по тротуару.</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-31" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-31" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-31" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-31" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-31" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div><div class="issue-card" data-index="32" data-id="574">
+      <div class="issue-header">
+        <span class="issue-num">#33</span>
+        <span class="issue-meta">ID: 574 | דרגה: C1 | תמרורים C1 כללי</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>אלכס קורנבליט</strong> (תמרורים כללי - חלק א')</div>
+        <div class="examiner-type">❌ סומנה כבעייתית</div>
+        <div class="examiner-note">אין תמונה!</div>
+      </div>
+      <div class="q-image"><img src="https://www.gov.il/BlobFolder/generalpage/tq_pic_02/he/TQ_PIC_3574.jpg" alt="תמונת שאלה" loading="lazy" onerror="this.parentElement.innerHTML='<span class=\'img-error\'>⚠️ התמונה לא נטענה</span>'"></div>
+      <div class="q-text">מה פירוש התמרור?</div>
+      <div class="answers"><div class="answer ">א. זהירות, עבודות בכביש.</div>
+<div class="answer correct">ב. הכניסה אסורה לטרקטור ולרכב עבודה. ✅</div>
+<div class="answer ">ג. הכניסה אסורה לרכב לא מנועי בלבד.</div>
+<div class="answer ">ד. הכניסה מותרת לטרקטור ולרכב עבודה.</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-32" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-32" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-32" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-32" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-32" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div><div class="issue-card" data-index="33" data-id="907">
+      <div class="issue-header">
+        <span class="issue-num">#34</span>
+        <span class="issue-meta">ID: 907 | דרגה: C1 | בטיחות C1 כללי</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>יניר נאוגאוקר</strong> (בטיחות כללי - חלק א')</div>
+        <div class="examiner-type">❌ סומנה כבעייתית</div>
+        <div class="examiner-note">לא רואה תמונה</div>
+      </div>
+      <div class="q-image"><img src="https://www.gov.il/BlobFolder/generalpage/tq_pic_02/he/TQ_PIC_3907.jpg" alt="תמונת שאלה" loading="lazy" onerror="this.parentElement.innerHTML='<span class=\'img-error\'>⚠️ התמונה לא נטענה</span>'"></div>
+      <div class="q-text">כיצד תתייחס אל המצב שלפניך?</div>
+      <div class="answers"><div class="answer ">א. סע בעקבות רוכב האופניים, צפור לו ועבור אותו במהירות.</div>
+<div class="answer ">ב. הגבר את המהירות ועקוף את רוכב האופניים לפני היכנסך אל הצומת.</div>
+<div class="answer correct">ג. האט ועקוף את רוכב האופניים, אגב שמירת רווח צד מתאים ומעקב אחרי תנועותיו. ✅</div>
+<div class="answer ">ד. צפור לרוכב האופניים עד שיפנה את נתיב נסיעתך, ועבור על פניו במהירות הרגילה שלך.</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-33" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-33" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-33" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-33" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-33" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div></div></div><div class="category-section" id="cat-relevance">
+    <div class="category-header" onclick="toggleCategory('relevance')">
+      <span class="cat-icon">🎯</span>
+      <span class="cat-title">רלוונטיות לדרגה</span>
+      <span class="cat-count">4</span>
+      <span class="cat-toggle" id="toggle-relevance">▼</span>
+    </div>
+    <div class="category-items" id="items-relevance"><div class="issue-card" data-index="34" data-id="1395">
+      <div class="issue-header">
+        <span class="issue-num">#35</span>
+        <span class="issue-meta">ID: 1395 | דרגה: D | חוק כללי D רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>אלבלה אברהם</strong> (חוק כללי - חלק א')</div>
+        <div class="examiner-type">❌ סומנה כבעייתית</div>
+        <div class="examiner-note">אולי רלוונטי להוסיף הילוך נמוך</div>
+      </div>
+      <div class="no-image">אין תמונה לשאלה זו</div>
+      <div class="q-text">Как следует управлять автомобилем на спуске?</div>
+      <div class="answers"><div class="answer ">א. На холостом ходу, для экономии топлива.</div>
+<div class="answer ">ב. С включенной передачей и постоянным нажатием на педаль сцепления.</div>
+<div class="answer correct">ג. Обязательно должна быть включена одна из передач. ✅</div>
+<div class="answer ">ד. На высокой передаче и при постоянном нажатии на педаль тормоза.</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-34" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-34" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-34" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-34" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-34" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div><div class="issue-card" data-index="35" data-id="14">
+      <div class="issue-header">
+        <span class="issue-num">#36</span>
+        <span class="issue-meta">ID: 14 | דרגה: C1 | חוק C1 כללי רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>שמשון נגאוקר</strong> (חוק כללי - חלק ב')</div>
+        <div class="examiner-type">❌ סומנה כבעייתית</div>
+        <div class="examiner-note">אפשר לוותר עליה...</div>
+      </div>
+      <div class="no-image">אין תמונה לשאלה זו</div>
+      <div class="q-text">Дайте определение понятию «тракторон» (квадроцикл):</div>
+      <div class="answers"><div class="answer ">א. Транспортное средство, движущееся не менее чем на четырех колесах, посадка на котором осуществляется так, что ноги водителя находятся с одной стороны сиденья, а управление осуществляется с помощью рулевого колеса.</div>
+<div class="answer ">ב. Транспортное средство, движущееся не менее чем на четырех колесах, управление которым осуществляется с помощью рулевого колеса.</div>
+<div class="answer correct">ג. Транспортное средство, движущееся не менее чем на четырех колесах, посадка на котором осуществляется верхом (ноги водителя с обеих сторон сиденья), а рулевое управление осуществляется с помощью руля велосипедного типа. ✅</div>
+<div class="answer ">ד. Транспортное средство, движущееся не менее чем на двух колесах, посадка на котором осуществляется верхом (ноги водителя с обеих сторон сиденья), а рулевое управление осуществляется с помощью руля велосипедного типа.</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-35" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-35" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-35" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-35" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-35" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div><div class="issue-card" data-index="36" data-id="1591">
+      <div class="issue-header">
+        <span class="issue-num">#37</span>
+        <span class="issue-meta">ID: 1591 | דרגה: B | חוק B כללי רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>שמשון נגאוקר</strong> (חוק כללי - חלק ב')</div>
+        <div class="examiner-type">❌ סומנה כבעייתית</div>
+        <div class="examiner-note">מה זה קשור לC-C1??</div>
+      </div>
+      <div class="no-image">אין תמונה לשאלה זו</div>
+      <div class="q-text">Категория прав, необходимая для управления мотоциклом с объемом двигателя до 125 куб. см и мощностью двигателя до 14.6 л.с. (11 кВт), это:</div>
+      <div class="answers"><div class="answer ">א. C1</div>
+<div class="answer ">ב. D</div>
+<div class="answer ">ג. B</div>
+<div class="answer correct">ד. A2 ✅</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-36" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-36" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-36" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-36" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-36" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div><div class="issue-card" data-index="37" data-id="553">
+      <div class="issue-header">
+        <span class="issue-num">#38</span>
+        <span class="issue-meta">ID: 553 | לא נמצא במאגר</span>
+      </div>
+      <div class="examiner-comment">
+        <strong>בוחן:</strong> אלכס קורנבליט (תמרורים כללי - חלק א')
+        <br><strong>הערה:</strong> לדעתי לבטל את השאלה. תשובה לא מתאימה.
+        <br><strong>סוג:</strong> ❌ בעייתית
+      </div>
+    </div></div></div><div class="category-section" id="cat-irrelevant">
+    <div class="category-header" onclick="toggleCategory('irrelevant')">
+      <span class="cat-icon">⚠️</span>
+      <span class="cat-title">שאלות לא רלוונטיות</span>
+      <span class="cat-count">14</span>
+      <span class="cat-toggle" id="toggle-irrelevant">▼</span>
+    </div>
+    <div class="category-items" id="items-irrelevant"><div class="issue-card" data-index="38" data-id="143">
+      <div class="issue-header">
+        <span class="issue-num">#39</span>
+        <span class="issue-meta">ID: 143 | דרגה: D | חוק כללי D רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>אלבלה אברהם</strong> (חוק כללי - חלק א')</div>
+        <div class="examiner-type">⚠️ סומנה כלא רלוונטית</div>
+        <div class="examiner-note">--- ללא הערה ---</div>
+      </div>
+      <div class="no-image">אין תמונה לשאלה זו</div>
+      <div class="q-text">В каких случаях существует обязанность снизить скорость?</div>
+      <div class="answers"><div class="answer correct">א. При встрече с животными или при их обгоне. ✅</div>
+<div class="answer ">ב. Нет обязанности снижать скорость. Есть обязанность вести машину осторожно.</div>
+<div class="answer ">ג. Обязанность снизить скорость существует только на городской дороге.</div>
+<div class="answer ">ד. Обязанность снизить скорость существует только при интенсивном движении на дороге.</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-38" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-38" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-38" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-38" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-38" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div><div class="issue-card" data-index="39" data-id="619">
+      <div class="issue-header">
+        <span class="issue-num">#40</span>
+        <span class="issue-meta">ID: 619 | דרגה: D | חוק כללי D רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>שמשון נגאוקר</strong> (חוק כללי - חלק ב')</div>
+        <div class="examiner-type">⚠️ סומנה כלא רלוונטית</div>
+        <div class="examiner-note">--- ללא הערה ---</div>
+      </div>
+      <div class="no-image">אין תמונה לשאלה זו</div>
+      <div class="q-text">Водитель «экскурсионного автомобиля» обязан иметь водительское удостоверение категории:</div>
+      <div class="answers"><div class="answer ">א. B или C</div>
+<div class="answer correct">ב. D или D1 ✅</div>
+<div class="answer ">ג. A или B</div>
+<div class="answer ">ד. B или C1</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-39" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-39" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-39" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-39" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-39" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div><div class="issue-card" data-index="40" data-id="1802">
+      <div class="issue-header">
+        <span class="issue-num">#41</span>
+        <span class="issue-meta">ID: 1802 | לא נמצא במאגר</span>
+      </div>
+      <div class="examiner-comment">
+        <strong>בוחן:</strong> אלכס קורנבליט (תמרורים כללי - חלק א')
+        <br><strong>הערה:</strong> ---
+        <br><strong>סוג:</strong> ⚠️ לא רלוונטית
+      </div>
+    </div><div class="issue-card" data-index="41" data-id="1073">
+      <div class="issue-header">
+        <span class="issue-num">#42</span>
+        <span class="issue-meta">ID: 1073 | דרגה: D | תמרורים כללי D רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>שרון צרימי</strong> (תמרורים כללי - חלק ב')</div>
+        <div class="examiner-type">⚠️ סומנה כלא רלוונטית</div>
+        <div class="examiner-note">שאלה לא כל כך רלוונטית להיום צבעו האדום של התמרור יכול לבלבל את הנשאל</div>
+      </div>
+      <div class="q-image"><img src="https://www.gov.il/BlobFolder/generalpage/tq_pic_01/he/TQ_PIC_31073.jpg" alt="תמונת שאלה" loading="lazy" onerror="this.parentElement.innerHTML='<span class=\'img-error\'>⚠️ התמונה לא נטענה</span>'"></div>
+      <div class="q-text">Что означает этот дорожный знак?</div>
+      <div class="answers"><div class="answer ">א. Расстояние до ближайшей дороги (в км).</div>
+<div class="answer correct">ב. Номер главной дороги. ✅</div>
+<div class="answer ">ג. Номер скоростной автомагистрали.</div>
+<div class="answer ">ד. Расстояние до ближайшего перекрестка (в км).</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-41" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-41" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-41" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-41" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-41" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div><div class="issue-card" data-index="42" data-id="1078">
+      <div class="issue-header">
+        <span class="issue-num">#43</span>
+        <span class="issue-meta">ID: 1078 | דרגה: D | תמרורים כללי D רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>שרון צרימי</strong> (תמרורים כללי - חלק ב')</div>
+        <div class="examiner-type">⚠️ סומנה כלא רלוונטית</div>
+        <div class="examiner-note">שלט שיכול להופיע לעיתים גם בדרך עירונית</div>
+      </div>
+      <div class="q-image"><img src="https://www.gov.il/BlobFolder/generalpage/tq_pic_01/he/TQ_PIC_31078.jpg" alt="תמונת שאלה" loading="lazy" onerror="this.parentElement.innerHTML='<span class=\'img-error\'>⚠️ התמונה לא נטענה</span>'"></div>
+      <div class="q-text">Что означает этот дорожный знак?</div>
+      <div class="answers"><div class="answer ">א. Предварительный указатель направлений перед перекрестком на автомагистрали.</div>
+<div class="answer correct">ב. Предварительный указатель направлений перед перекрестком на междугородной дороге. ✅</div>
+<div class="answer ">ג. Предварительный указатель выезда из пунктов назначения на городской дороге.</div>
+<div class="answer ">ד. Предварительный указатель направлений перед развязкой на городской дороге.</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-42" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-42" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-42" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-42" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-42" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div><div class="issue-card" data-index="43" data-id="1123">
+      <div class="issue-header">
+        <span class="issue-num">#44</span>
+        <span class="issue-meta">ID: 1123 | דרגה: D | תמרורים כללי D רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>שרון צרימי</strong> (תמרורים כללי - חלק ב')</div>
+        <div class="examiner-type">⚠️ סומנה כלא רלוונטית</div>
+        <div class="examiner-note">שאלה שלא משיגה יותר מדי ידע לנבחן</div>
+      </div>
+      <div class="q-image"><img src="https://www.gov.il/BlobFolder/generalpage/tq_pic_01/he/TQ_PIC_31123.jpg" alt="תמונת שאלה" loading="lazy" onerror="this.parentElement.innerHTML='<span class=\'img-error\'>⚠️ התמונה לא נטענה</span>'"></div>
+      <div class="q-text">Что означает этот дорожный знак?</div>
+      <div class="answers"><div class="answer ">א. Указатель направлений на автомагистралях.</div>
+<div class="answer correct">ב. Указатель направлений на городских дорогах. ✅</div>
+<div class="answer ">ג. Указатель съезда с автомагистрали.</div>
+<div class="answer ">ד. Указатель направлений на междугородной дороге.</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-43" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-43" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-43" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-43" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-43" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div><div class="issue-card" data-index="44" data-id="1387">
+      <div class="issue-header">
+        <span class="issue-num">#45</span>
+        <span class="issue-meta">ID: 1387 | דרגה: D | תמרורים כללי D רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>שרון צרימי</strong> (תמרורים כללי - חלק ב')</div>
+        <div class="examiner-type">⚠️ סומנה כלא רלוונטית</div>
+        <div class="examiner-note">כמה מחסומים לפני מפגש מסילת ברזל יש כבר?</div>
+      </div>
+      <div class="q-image"><img src="https://www.gov.il/BlobFolder/generalpage/tq_pic_01/he/TQ_PIC_31387.jpg" alt="תמונת שאלה" loading="lazy" onerror="this.parentElement.innerHTML='<span class=\'img-error\'>⚠️ התמונה לא נטענה</span>'"></div>
+      <div class="q-text">Какой дорожный знак означает: шлагбаум перед железнодорожным переездом?</div>
+      <div class="answers"><div class="answer correct">א. 404 ✅</div>
+<div class="answer ">ב. 403</div>
+<div class="answer ">ג. 113</div>
+<div class="answer ">ד. 511</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-44" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-44" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-44" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-44" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-44" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div><div class="issue-card" data-index="45" data-id="1390">
+      <div class="issue-header">
+        <span class="issue-num">#46</span>
+        <span class="issue-meta">ID: 1390 | דרגה: D | תמרורים כללי D רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>שרון צרימי</strong> (תמרורים כללי - חלק ב')</div>
+        <div class="examiner-type">⚠️ סומנה כלא רלוונטית</div>
+        <div class="examiner-note">שאלה רלוונטית למשתמשים בתחבורה ציבורית</div>
+      </div>
+      <div class="q-image"><img src="https://www.gov.il/BlobFolder/generalpage/tq_pic_01/he/TQ_PIC_31390.jpg" alt="תמונת שאלה" loading="lazy" onerror="this.parentElement.innerHTML='<span class=\'img-error\'>⚠️ התמונה לא נטענה</span>'"></div>
+      <div class="q-text">В чем разница между этими знаками?</div>
+      <div class="answers"><div class="answer correct">א. Знак 505 обозначает остановку общественного автобуса. Знак 506 обозначает станцию местного поезда. ✅</div>
+<div class="answer ">ב. Знак 505 обозначает станцию трамвая. Знак 506 обозначает остановку общественного автобуса.</div>
+<div class="answer ">ג. Знак 505 обозначает остановку частных автобусов. Знак 506 обозначает станцию местного поезда.</div>
+<div class="answer ">ד. Знак 505 обозначает остановку автобусов на автомагистрали. Знак 506 обозначает остановку общественных автобусов только на городской дороге.</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-45" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-45" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-45" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-45" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-45" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div><div class="issue-card" data-index="46" data-id="585">
+      <div class="issue-header">
+        <span class="issue-num">#47</span>
+        <span class="issue-meta">ID: 585 | דרגה: D | תמרורים כללי D רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>שרון צרימי</strong> (תמרורים כללי - חלק ב')</div>
+        <div class="examiner-type">⚠️ סומנה כלא רלוונטית</div>
+        <div class="examiner-note">שאלה שעוד היו חיילים שהיו עוצרים טרמפים</div>
+      </div>
+      <div class="q-image"><img src="https://www.gov.il/BlobFolder/generalpage/tq_pic_02/he/TQ_PIC_3585.jpg" alt="תמונת שאלה" loading="lazy" onerror="this.parentElement.innerHTML='<span class=\'img-error\'>⚠️ התמונה לא נטענה</span>'"></div>
+      <div class="q-text">Что означает этот знак?</div>
+      <div class="answers"><div class="answer ">א. Станция подвозки солдат. Остановка разрешена только военным транспортным средствам.</div>
+<div class="answer ">ב. Станция подвозки – остановка коммерческого транспорта запрещена.</div>
+<div class="answer ">ג. Парковка для транспортных средств, перевозящих солдат.</div>
+<div class="answer correct">ד. Станция подвозки солдат – только для посадки и высадки (ожидание на станции запрещено). ✅</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-46" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-46" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-46" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-46" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-46" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div><div class="issue-card" data-index="47" data-id="1691">
+      <div class="issue-header">
+        <span class="issue-num">#48</span>
+        <span class="issue-meta">ID: 1691 | דרגה: D | הכרת הרכב D רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>בנימין לוי</strong> (הכרת הרכב + שאלות ספציפיות)</div>
+        <div class="examiner-type">⚠️ סומנה כלא רלוונטית</div>
+        <div class="examiner-note">--- ללא הערה ---</div>
+      </div>
+      <div class="no-image">אין תמונה לשאלה זו</div>
+      <div class="q-text">Пристегивание ремня безопасности должным образом:</div>
+      <div class="answers"><div class="answer ">א. Уменьшает колебания водителя на сиденье и предотвращает аварию.</div>
+<div class="answer ">ב. Поддерживает бдительность водителя.</div>
+<div class="answer ">ג. Поддерживает прямую посадку водителя.</div>
+<div class="answer correct">ד. Уменьшает травмирование пристегнутого человека во время аварии. ✅</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-47" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-47" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-47" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-47" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-47" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div><div class="issue-card" data-index="48" data-id="743">
+      <div class="issue-header">
+        <span class="issue-num">#49</span>
+        <span class="issue-meta">ID: 743 | לא נמצא במאגר</span>
+      </div>
+      <div class="examiner-comment">
+        <strong>בוחן:</strong> בנימין לוי (הכרת הרכב + שאלות ספציפיות)
+        <br><strong>הערה:</strong> ---
+        <br><strong>סוג:</strong> ⚠️ לא רלוונטית
+      </div>
+    </div><div class="issue-card" data-index="49" data-id="1691">
+      <div class="issue-header">
+        <span class="issue-num">#50</span>
+        <span class="issue-meta">ID: 1691 | דרגה: D | הכרת הרכב D רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>בנימין לוי</strong> (הכרת הרכב + שאלות ספציפיות)</div>
+        <div class="examiner-type">⚠️ סומנה כלא רלוונטית</div>
+        <div class="examiner-note">--- ללא הערה ---</div>
+      </div>
+      <div class="no-image">אין תמונה לשאלה זו</div>
+      <div class="q-text">Пристегивание ремня безопасности должным образом:</div>
+      <div class="answers"><div class="answer ">א. Уменьшает колебания водителя на сиденье и предотвращает аварию.</div>
+<div class="answer ">ב. Поддерживает бдительность водителя.</div>
+<div class="answer ">ג. Поддерживает прямую посадку водителя.</div>
+<div class="answer correct">ד. Уменьшает травмирование пристегнутого человека во время аварии. ✅</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-49" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-49" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-49" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-49" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-49" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div><div class="issue-card" data-index="50" data-id="743">
+      <div class="issue-header">
+        <span class="issue-num">#51</span>
+        <span class="issue-meta">ID: 743 | לא נמצא במאגר</span>
+      </div>
+      <div class="examiner-comment">
+        <strong>בוחן:</strong> בנימין לוי (הכרת הרכב + שאלות ספציפיות)
+        <br><strong>הערה:</strong> ---
+        <br><strong>סוג:</strong> ⚠️ לא רלוונטית
+      </div>
+    </div><div class="issue-card" data-index="51" data-id="1424">
+      <div class="issue-header">
+        <span class="issue-num">#52</span>
+        <span class="issue-meta">ID: 1424 | דרגה: C | חוק C ספציפי רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>בנימין לוי</strong> (הכרת הרכב + שאלות ספציפיות)</div>
+        <div class="examiner-type">⚠️ סומנה כלא רלוונטית</div>
+        <div class="examiner-note">--- ללא הערה ---</div>
+      </div>
+      <div class="no-image">אין תמונה לשאלה זו</div>
+      <div class="q-text">На каком расстоянии от транспортного средства, перевозящего негабаритный груз, должен двигаться автомобиль сопровождения?</div>
+      <div class="answers"><div class="answer ">א. Расстояние между двумя транспортными средствами не должно превышать 150 метров.</div>
+<div class="answer ">ב. На расстоянии, при котором водитель транспортного средства, перевозящего груз, сможет видеть автомобиль сопровождения в зеркалах на дороге с двусторонним движением.</div>
+<div class="answer ">ג. Автомобиль сопровождения должен соблюдать дистанцию не менее 100 метров от транспортного средства, перевозящего груз.</div>
+<div class="answer correct">ד. На расстоянии, при котором между водителями обоих транспортных средств постоянно поддерживается зрительный контакт. ✅</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-51" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-51" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-51" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-51" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-51" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div></div></div><div class="category-section" id="cat-other">
+    <div class="category-header" onclick="toggleCategory('other')">
+      <span class="cat-icon">📝</span>
+      <span class="cat-title">הערות נוספות</span>
+      <span class="cat-count">16</span>
+      <span class="cat-toggle" id="toggle-other">▼</span>
+    </div>
+    <div class="category-items" id="items-other"><div class="issue-card" data-index="52" data-id="1347">
+      <div class="issue-header">
+        <span class="issue-num">#53</span>
+        <span class="issue-meta">ID: 1347 | דרגה: D | חוק ספציפי D רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>שמשון נגאוקר</strong> (חוק כללי - חלק ב')</div>
+        <div class="examiner-type">❌ סומנה כבעייתית</div>
+        <div class="examiner-note">קצת מורכב מדי....</div>
+      </div>
+      <div class="no-image">אין תמונה לשאלה זו</div>
+      <div class="q-text">Категория прав, необходимая для управления коммерческим транспортным средством, разрешенный полный вес которого превышает 3 500 кг, и к которому прицеплен прицеп или полуприцеп весом 4 000 кг:</div>
+      <div class="answers"><div class="answer ">א. B</div>
+<div class="answer correct">ב. C+E ✅</div>
+<div class="answer ">ג. D</div>
+<div class="answer ">ד. C1</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-52" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-52" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-52" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-52" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-52" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div><div class="issue-card" data-index="53" data-id="22">
+      <div class="issue-header">
+        <span class="issue-num">#54</span>
+        <span class="issue-meta">ID: 22 | דרגה: C1 | חוק C1 כללי רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>שמשון נגאוקר</strong> (חוק כללי - חלק ב')</div>
+        <div class="examiner-type">❌ סומנה כבעייתית</div>
+        <div class="examiner-note">--- ללא הערה ---</div>
+      </div>
+      <div class="no-image">אין תמונה לשאלה זו</div>
+      <div class="q-text">Пассажир, сидящий на заднем сиденье частного пассажирского автомобиля, обязан быть пристегнутым ремнем безопасности. Кто несет ответственность, если он не был пристегнут во время поездки?</div>
+      <div class="answers"><div class="answer ">א. Только пассажир.</div>
+<div class="answer ">ב. Владелец транспортного средства.</div>
+<div class="answer correct">ג. Водитель и пассажир. ✅</div>
+<div class="answer ">ד. Только водитель.</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-53" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-53" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-53" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-53" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-53" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div><div class="issue-card" data-index="54" data-id="383">
+      <div class="issue-header">
+        <span class="issue-num">#55</span>
+        <span class="issue-meta">ID: 383 | דרגה: D | תמרורים כללי D רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>אלכס קורנבליט</strong> (תמרורים כללי - חלק א')</div>
+        <div class="examiner-type">❌ סומנה כבעייתית</div>
+        <div class="examiner-note">בהגדרה החדשה של תמרור 216 כבר מופיע מהירות שלא פחותה מ60 קמ&quot;ש!</div>
+      </div>
+      <div class="q-image"><img src="https://www.gov.il/BlobFolder/generalpage/tq_pic_01/he/TQ_PIC_3383.jpg" alt="תמונת שאלה" loading="lazy" onerror="this.parentElement.innerHTML='<span class=\'img-error\'>⚠️ התמונה לא נטענה</span>'"></div>
+      <div class="q-text">Какой знак будет установлен в дополнение к знаку 216?</div>
+      <div class="answers"><div class="answer ">א. 424</div>
+<div class="answer correct">ב. 218 ✅</div>
+<div class="answer ">ג. 407</div>
+<div class="answer ">ד. 418</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-54" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-54" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-54" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-54" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-54" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div><div class="issue-card" data-index="55" data-id="587">
+      <div class="issue-header">
+        <span class="issue-num">#56</span>
+        <span class="issue-meta">ID: 587 | דרגה: D | תמרורים כללי D רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>אלכס קורנבליט</strong> (תמרורים כללי - חלק א')</div>
+        <div class="examiner-type">❌ סומנה כבעייתית</div>
+        <div class="examiner-note">רחוב ללא מוצא.</div>
+      </div>
+      <div class="q-image"><img src="https://www.gov.il/BlobFolder/generalpage/tq_pic_02/he/TQ_PIC_3556.jpg" alt="תמונת שאלה" loading="lazy" onerror="this.parentElement.innerHTML='<span class=\'img-error\'>⚠️ התמונה לא נטענה</span>'"></div>
+      <div class="q-text">Что означает этот знак?</div>
+      <div class="answers"><div class="answer correct">א. Дорога справа — тупик. ✅</div>
+<div class="answer ">ב. Выезд транспортных средств с парковки справа от дороги.</div>
+<div class="answer ">ג. Уступите дорогу встречному транспортному средству, поворачивающему налево.</div>
+<div class="answer ">ד. Уступите дорогу при повороте направо.</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-55" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-55" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-55" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-55" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-55" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div><div class="issue-card" data-index="56" data-id="1803">
+      <div class="issue-header">
+        <span class="issue-num">#57</span>
+        <span class="issue-meta">ID: 1803 | דרגה: D | תמרורים כללי D רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>שרון צרימי</strong> (תמרורים כללי - חלק ב')</div>
+        <div class="examiner-type">❌ סומנה כבעייתית</div>
+        <div class="examiner-note">תמרור שכבר אינו קיים בלוח התמרורים</div>
+      </div>
+      <div class="q-image"><img src="https://www.gov.il/BlobFolder/generalpage/tq_pic_01/he/TQ_PIC_31803.jpg" alt="תמונת שאלה" loading="lazy" onerror="this.parentElement.innerHTML='<span class=\'img-error\'>⚠️ התמונה לא נטענה</span>'"></div>
+      <div class="q-text">Какой знак обозначает дорожно-транспортное происшествие (ДТП) впереди?</div>
+      <div class="answers"><div class="answer ">א. 127</div>
+<div class="answer ">ב. 107</div>
+<div class="answer correct">ג. 151 ✅</div>
+<div class="answer ">ד. 150</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-56" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-56" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-56" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-56" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-56" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div><div class="issue-card" data-index="57" data-id="186">
+      <div class="issue-header">
+        <span class="issue-num">#58</span>
+        <span class="issue-meta">ID: 186 | דרגה: D | תמרורים כללי D רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>שרון צרימי</strong> (תמרורים כללי - חלק ב')</div>
+        <div class="examiner-type">❌ סומנה כבעייתית</div>
+        <div class="examiner-note">חציית הצומת על פי התמרורים המוצבים בצומת</div>
+      </div>
+      <div class="q-image"><img src="https://www.gov.il/BlobFolder/generalpage/tq_pic_01/he/TQ_PIC_3186.jpg" alt="תמונת שאלה" loading="lazy" onerror="this.parentElement.innerHTML='<span class=\'img-error\'>⚠️ התמונה לא נטענה</span>'"></div>
+      <div class="q-text">Как вам следует поступить при приближении к перекрестку, на котором мигает желтый сигнал светофора?</div>
+      <div class="answers"><div class="answer ">א. В любом случае остановитесь перед пешеходным переходом.</div>
+<div class="answer ">ב. Ускорьтесь, пока сигнал светофора не сменился на красный.</div>
+<div class="answer correct">ג. Сбавьте скорость и даже остановитесь при необходимости – в зависимости от дорожной обстановки. ✅</div>
+<div class="answer ">ד. Сбавьте скорость и уступите дорогу только транспортному средству, приближающемуся слева.</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-57" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-57" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-57" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-57" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-57" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div><div class="issue-card" data-index="58" data-id="310">
+      <div class="issue-header">
+        <span class="issue-num">#59</span>
+        <span class="issue-meta">ID: 310 | דרגה: D | תמרורים כללי D רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>שרון צרימי</strong> (תמרורים כללי - חלק ב')</div>
+        <div class="examiner-type">❌ סומנה כבעייתית</div>
+        <div class="examiner-note">ההסבר לצורתם לא רשום ומוסבר בלוח התמרורים</div>
+      </div>
+      <div class="q-image"><img src="https://www.gov.il/BlobFolder/generalpage/tq_pic_01/he/TQ_PIC_3310.jpg" alt="תמונת שאלה" loading="lazy" onerror="this.parentElement.innerHTML='<span class=\'img-error\'>⚠️ התמונה לא נטענה</span>'"></div>
+      <div class="q-text">По какой причине знаки, изображенные перед вами, отличаются своей особой формой от остальных знаков?</div>
+      <div class="answers"><div class="answer correct">א. Чтобы выделить их, а также чтобы их можно было различить и правильно истолковать даже в условиях плохой видимости. ✅</div>
+<div class="answer ">ב. Потому что эти два знака менее важны, чем остальные знаки.</div>
+<div class="answer ">ג. Чтобы позволить пешеходам различать знаки, установленные не по ходу их движения.</div>
+<div class="answer ">ד. Потому что эти два знака важнее остальных знаков.</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-58" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-58" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-58" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-58" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-58" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div><div class="issue-card" data-index="59" data-id="386">
+      <div class="issue-header">
+        <span class="issue-num">#60</span>
+        <span class="issue-meta">ID: 386 | דרגה: D | תמרורים כללי D רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>שרון צרימי</strong> (תמרורים כללי - חלק ב')</div>
+        <div class="examiner-type">❌ סומנה כבעייתית</div>
+        <div class="examiner-note">קצה קטע שחל עליו איסור עקיפה</div>
+      </div>
+      <div class="q-image"><img src="https://www.gov.il/BlobFolder/generalpage/tq_pic_01/he/TQ_PIC_3386.jpg" alt="תמונת שאלה" loading="lazy" onerror="this.parentElement.innerHTML='<span class=\'img-error\'>⚠️ התמונה לא נטענה</span>'"></div>
+      <div class="q-text">Что означает этот знак?</div>
+      <div class="answers"><div class="answer ">א. Грузовым автомобилям запрещен обгон частных пассажирских автомобилей.</div>
+<div class="answer ">ב. Частным пассажирским автомобилям запрещен обгон грузовиков.</div>
+<div class="answer correct">ג. Конец участка дороги, на который распространяется запрет на обгон. ✅</div>
+<div class="answer ">ד. Обгон автобуса запрещен.</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-59" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-59" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-59" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-59" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-59" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div><div class="issue-card" data-index="60" data-id="394">
+      <div class="issue-header">
+        <span class="issue-num">#61</span>
+        <span class="issue-meta">ID: 394 | דרגה: D | תמרורים כללי D רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>שרון צרימי</strong> (תמרורים כללי - חלק ב')</div>
+        <div class="examiner-type">❌ סומנה כבעייתית</div>
+        <div class="examiner-note">העקיפה אסורה ממקום הצבתו של תמרור 132</div>
+      </div>
+      <div class="q-image"><img src="https://www.gov.il/BlobFolder/generalpage/tq_pic_01/he/TQ_PIC_3394.jpg" alt="תמונת שאלה" loading="lazy" onerror="this.parentElement.innerHTML='<span class=\'img-error\'>⚠️ התמונה לא נטענה</span>'"></div>
+      <div class="q-text">После какого из этих знаков обгон запрещен (на расстоянии около 100 метров)?</div>
+      <div class="answers"><div class="answer ">א. 307</div>
+<div class="answer ">ב. 130</div>
+<div class="answer ">ג. 135</div>
+<div class="answer correct">ד. 132 ✅</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-60" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-60" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-60" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-60" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-60" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div><div class="issue-card" data-index="61" data-id="395">
+      <div class="issue-header">
+        <span class="issue-num">#62</span>
+        <span class="issue-meta">ID: 395 | דרגה: D | תמרורים כללי D רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>שרון צרימי</strong> (תמרורים כללי - חלק ב')</div>
+        <div class="examiner-type">❌ סומנה כבעייתית</div>
+        <div class="examiner-note">איסור הפניה שמאלה הוא לפנייה הקרובה גם אם אינה תחנת דלק</div>
+      </div>
+      <div class="q-image"><img src="https://www.gov.il/BlobFolder/generalpage/tq_pic_01/he/TQ_PIC_3395.jpg" alt="תמונת שאלה" loading="lazy" onerror="this.parentElement.innerHTML='<span class=\'img-error\'>⚠️ התמונה לא נטענה</span>'"></div>
+      <div class="q-text">Какой из знаков запрещает поворот налево на автозаправочную станцию?</div>
+      <div class="answers"><div class="answer ">א. 428</div>
+<div class="answer ">ב. 205</div>
+<div class="answer correct">ג. 429 ✅</div>
+<div class="answer ">ד. 431</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-61" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-61" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-61" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-61" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-61" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div><div class="issue-card" data-index="62" data-id="400">
+      <div class="issue-header">
+        <span class="issue-num">#63</span>
+        <span class="issue-meta">ID: 400 | דרגה: C1 | תמרורים C1 כללי רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>שרון צרימי</strong> (תמרורים כללי - חלק ב')</div>
+        <div class="examiner-type">❌ סומנה כבעייתית</div>
+        <div class="examiner-note">חנייה לרכב שמשקלו הכולל עד 2200 ק&quot;ג.</div>
+      </div>
+      <div class="q-image"><img src="https://www.gov.il/BlobFolder/generalpage/tq_pic_01/he/TQ_PIC_3400.jpg" alt="תמונת שאלה" loading="lazy" onerror="this.parentElement.innerHTML='<span class=\'img-error\'>⚠️ התמונה לא נטענה</span>'"></div>
+      <div class="q-text">Какой знак разрешает стоянку транспортного средства на тротуаре?</div>
+      <div class="answers"><div class="answer ">א. 432</div>
+<div class="answer correct">ב. 627 ✅</div>
+<div class="answer ">ג. 626</div>
+<div class="answer ">ד. 435</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-62" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-62" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-62" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-62" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-62" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div><div class="issue-card" data-index="63" data-id="560">
+      <div class="issue-header">
+        <span class="issue-num">#64</span>
+        <span class="issue-meta">ID: 560 | דרגה: D | תמרורים כללי D רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>שרון צרימי</strong> (תמרורים כללי - חלק ב')</div>
+        <div class="examiner-type">❌ סומנה כבעייתית</div>
+        <div class="examiner-note">תחבורה ציבורית בלבד ע&quot;פ תמרור 501</div>
+      </div>
+      <div class="q-image"><img src="https://www.gov.il/BlobFolder/generalpage/tq_pic_02/he/TQ_PIC_3560.jpg" alt="תמונת שאלה" loading="lazy" onerror="this.parentElement.innerHTML='<span class=\'img-error\'>⚠️ התמונה לא נטענה</span>'"></div>
+      <div class="q-text">Кто может двигаться навстречу, когда стрелка на знаке желтого цвета?</div>
+      <div class="answers"><div class="answer correct">א. Транспортное средство, используемое для общественного транспорта, или другое транспортное средство, движение которого разрешено знаком. ✅</div>
+<div class="answer ">ב. Только поезд.</div>
+<div class="answer ">ג. Только экскурсионный автобус.</div>
+<div class="answer ">ד. Транспортное средство, перевозящее более двух пассажиров.</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-63" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-63" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-63" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-63" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-63" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div><div class="issue-card" data-index="64" data-id="561">
+      <div class="issue-header">
+        <span class="issue-num">#65</span>
+        <span class="issue-meta">ID: 561 | דרגה: D | תמרורים כללי D רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>שרון צרימי</strong> (תמרורים כללי - חלק ב')</div>
+        <div class="examiner-type">❌ סומנה כבעייתית</div>
+        <div class="examiner-note">ע&quot;פ תמרור 501</div>
+      </div>
+      <div class="q-image"><img src="https://www.gov.il/BlobFolder/generalpage/tq_pic_02/he/TQ_PIC_3560.jpg" alt="תמונת שאלה" loading="lazy" onerror="this.parentElement.innerHTML='<span class=\'img-error\'>⚠️ התמונה לא נטענה</span>'"></div>
+      <div class="q-text">Когда вы видите перед собой этот дорожный знак:</div>
+      <div class="answers"><div class="answer ">א. Грузовым автомобилям разрешено ехать по дороге во встречном направлении.</div>
+<div class="answer correct">ב. Вы въезжаете на участок, где встречное движение разрешено только общественному транспорту или другому транспорту, разрешенному знаком. ✅</div>
+<div class="answer ">ג. Вы въезжаете на дорогу, где есть две полосы в каждом направлении.</div>
+<div class="answer ">ד. Вы находитесь на дороге с односторонним движением. Для транспортных средств общей массой до 3500 кг дорога является двусторонней.</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-64" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-64" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-64" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-64" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-64" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div><div class="issue-card" data-index="65" data-id="563">
+      <div class="issue-header">
+        <span class="issue-num">#66</span>
+        <span class="issue-meta">ID: 563 | דרגה: D | תמרורים כללי D רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>שרון צרימי</strong> (תמרורים כללי - חלק ב')</div>
+        <div class="examiner-type">❌ סומנה כבעייתית</div>
+        <div class="examiner-note">למה לא לשאול את משמעות התמרור?</div>
+      </div>
+      <div class="q-image"><img src="https://www.gov.il/BlobFolder/generalpage/tq_pic_02/he/TQ_PIC_3562.jpg" alt="תמונת שאלה" loading="lazy" onerror="this.parentElement.innerHTML='<span class=\'img-error\'>⚠️ התמונה לא נטענה</span>'"></div>
+      <div class="q-text">Разрешен ли въезд велосипедам на дорогу, на въезде в которую установлен этот знак?</div>
+      <div class="answers"><div class="answer ">א. Разрешен, только на городской дороге.</div>
+<div class="answer ">ב. Разрешен всегда.</div>
+<div class="answer correct">ג. Запрещен. ✅</div>
+<div class="answer ">ד. Разрешен, на междугородной дороге.</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-65" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-65" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-65" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-65" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-65" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div><div class="issue-card" data-index="66" data-id="616">
+      <div class="issue-header">
+        <span class="issue-num">#67</span>
+        <span class="issue-meta">ID: 616 | דרגה: D | תמרורים כללי D רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>שרון צרימי</strong> (תמרורים כללי - חלק ב')</div>
+        <div class="examiner-type">❌ סומנה כבעייתית</div>
+        <div class="examiner-note">בהסבר לתמרור אין חובה להדליק אורות</div>
+      </div>
+      <div class="q-image"><img src="https://www.gov.il/BlobFolder/generalpage/tq_pic_02/he/TQ_PIC_3616.jpg" alt="תמונת שאלה" loading="lazy" onerror="this.parentElement.innerHTML='<span class=\'img-error\'>⚠️ התמונה לא נטענה</span>'"></div>
+      <div class="q-text">При движении в туннеле, обозначенном знаком 633:</div>
+      <div class="answers"><div class="answer correct">א. Вы обязаны включить фары. ✅</div>
+<div class="answer ">ב. Вам разрешено сменить полосу.</div>
+<div class="answer ">ג. Вам разрешено обогнать другое транспортное средство.</div>
+<div class="answer ">ד. Вы обязаны включить противотуманные фары.</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-66" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-66" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-66" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-66" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-66" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div><div class="issue-card" data-index="67" data-id="997">
+      <div class="issue-header">
+        <span class="issue-num">#68</span>
+        <span class="issue-meta">ID: 997 | דרגה: C1 | הכרת הרכב C1 כללי רוסית</span>
+      </div>
+      <div class="examiner-feedback">
+        <div class="examiner-name">👤 בוחן: <strong>בנימין לוי</strong> (הכרת הרכב + שאלות ספציפיות)</div>
+        <div class="examiner-type">❌ סומנה כבעייתית</div>
+        <div class="examiner-note">בלם עזר יכול לשמש כבלם חרום</div>
+      </div>
+      <div class="no-image">אין תמונה לשאלה זו</div>
+      <div class="q-text">Почему стояночный тормоз следует использовать только для парковки?</div>
+      <div class="answers"><div class="answer ">א. Потому что его рукоятка (или рычаг) неудобна для управления.</div>
+<div class="answer ">ב. Потому что срок его службы короток, и его не следует тратить на обычные торможения.</div>
+<div class="answer ">ג. Стояночный тормоз не может служить в качестве аварийного тормоза.</div>
+<div class="answer correct">ד. Стояночный тормоз действует не на все колеса автомобиля, и его мощность очень мала. ✅</div></div>
+      <div class="decision-section">
+        <div class="decision-label">החלטת רב בוחן:</div>
+        <div class="decision-buttons">
+          <label><input type="radio" name="decision-67" value="keep" onchange="saveState()"> <span class="btn-decision btn-keep">✅ להשאיר</span></label>
+          <label><input type="radio" name="decision-67" value="fix" onchange="saveState()"> <span class="btn-decision btn-fix">🔧 לתקן</span></label>
+          <label><input type="radio" name="decision-67" value="remove" onchange="saveState()"> <span class="btn-decision btn-remove">🗑️ להסיר</span></label>
+          <label><input type="radio" name="decision-67" value="duplicate" onchange="saveState()"> <span class="btn-decision btn-dup">🔄 כפולה</span></label>
+        </div>
+        <textarea class="chief-notes" id="chief-notes-67" placeholder="הערות רב בוחן..." oninput="saveState()"></textarea>
+      </div>
+    </div></div></div>
+
+<!-- Summary Output -->
+<div class="summary-section" id="summary-section">
+  <h2>📊 סיכום החלטות רב בוחן</h2>
+  <div class="summary-text" id="summary-text"></div>
+  <div style="text-align:center; margin-top: 12px;">
+    <button class="save-btn btn-primary" onclick="copySummary()">📋 העתק ללוח</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const TOTAL_ISSUES = 68;
+const STORAGE_KEY = 'chief-review-state-v1';
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show';
+  setTimeout(() => { t.className = 'toast'; }, 2500);
+}
+
+function saveState() {
+  const state = {};
+  for (let i = 0; i < TOTAL_ISSUES; i++) {
+    const radios = document.querySelectorAll('input[name="decision-' + i + '"]');
+    let val = '';
+    radios.forEach(r => { if (r.checked) val = r.value; });
+    const notes = document.getElementById('chief-notes-' + i);
+    if (val || (notes && notes.value)) {
+      state[i] = { decision: val, notes: notes ? notes.value : '' };
+    }
+  }
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch(e) {}
+  updateProgress();
+  updateCardBorders();
+}
+
+function loadFromStorage() {
+  try {
+    const data = localStorage.getItem(STORAGE_KEY);
+    if (data) applyState(JSON.parse(data));
+  } catch(e) {}
+}
+
+function applyState(state) {
+  Object.entries(state).forEach(([i, s]) => {
+    if (s.decision) {
+      const radio = document.querySelector('input[name="decision-' + i + '"][value="' + s.decision + '"]');
+      if (radio) radio.checked = true;
+    }
+    if (s.notes) {
+      const notes = document.getElementById('chief-notes-' + i);
+      if (notes) notes.value = s.notes;
+    }
+  });
+  updateProgress();
+  updateCardBorders();
+}
+
+function updateCardBorders() {
+  for (let i = 0; i < TOTAL_ISSUES; i++) {
+    const card = document.querySelector('.issue-card[data-index="' + i + '"]');
+    if (!card) continue;
+    const radios = document.querySelectorAll('input[name="decision-' + i + '"]');
+    let val = '';
+    radios.forEach(r => { if (r.checked) val = r.value; });
+    card.setAttribute('data-decision', val);
+  }
+}
+
+function updateProgress() {
+  let keep = 0, fix = 0, remove = 0, dup = 0, pending = 0;
+  for (let i = 0; i < TOTAL_ISSUES; i++) {
+    const radios = document.querySelectorAll('input[name="decision-' + i + '"]');
+    let val = '';
+    radios.forEach(r => { if (r.checked) val = r.value; });
+    if (val === 'keep') keep++;
+    else if (val === 'fix') fix++;
+    else if (val === 'remove') remove++;
+    else if (val === 'duplicate') dup++;
+    else pending++;
+  }
+  const done = TOTAL_ISSUES - pending;
+  const pct = TOTAL_ISSUES > 0 ? Math.round(done / TOTAL_ISSUES * 100) : 0;
+  document.getElementById('progress-pct').textContent = pct + '%';
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('cnt-keep').textContent = keep;
+  document.getElementById('cnt-fix').textContent = fix;
+  document.getElementById('cnt-remove').textContent = remove;
+  document.getElementById('cnt-dup').textContent = dup;
+  document.getElementById('cnt-pending').textContent = pending;
+}
+
+function toggleCategory(key) {
+  const items = document.getElementById('items-' + key);
+  const toggle = document.getElementById('toggle-' + key);
+  if (items.classList.contains('collapsed')) {
+    items.classList.remove('collapsed');
+    toggle.textContent = '▼';
+  } else {
+    items.classList.add('collapsed');
+    toggle.textContent = '◀';
+  }
+}
+
+function filterItems(filter, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  document.querySelectorAll('.issue-card').forEach(card => {
+    if (filter === 'all') { card.style.display = ''; return; }
+    const idx = card.getAttribute('data-index');
+    const radios = document.querySelectorAll('input[name="decision-' + idx + '"]');
+    let val = '';
+    radios.forEach(r => { if (r.checked) val = r.value; });
+    if (filter === 'pending') {
+      card.style.display = val === '' ? '' : 'none';
+    } else {
+      card.style.display = val === filter ? '' : 'none';
+    }
+  });
+
+  // Show all category sections
+  document.querySelectorAll('.category-items').forEach(ci => ci.classList.remove('collapsed'));
+  document.querySelectorAll('.cat-toggle').forEach(t => t.textContent = '▼');
+}
+
+function generateSummary() {
+  let summary = '===========================\n';
+  summary += 'סיכום החלטות רב בוחן\n';
+  summary += '===========================\n';
+  summary += 'תאריך: ' + new Date().toLocaleDateString('he-IL') + '\n';
+  summary += 'סה"כ שאלות שנבדקו: 68\n\n';
+
+  const decisions = { keep: [], fix: [], remove: [], duplicate: [], pending: [] };
+
+  for (let i = 0; i < TOTAL_ISSUES; i++) {
+    const card = document.querySelector('.issue-card[data-index="' + i + '"]');
+    const id = card ? card.getAttribute('data-id') : '?';
+    const radios = document.querySelectorAll('input[name="decision-' + i + '"]');
+    let val = '';
+    radios.forEach(r => { if (r.checked) val = r.value; });
+    const notes = document.getElementById('chief-notes-' + i);
+    const notesVal = notes ? notes.value.trim() : '';
+
+    const entry = { index: i + 1, id: id, notes: notesVal };
+    if (!val) decisions.pending.push(entry);
+    else decisions[val].push(entry);
+  }
+
+  summary += '✅ להשאיר (' + decisions.keep.length + '):\n';
+  if (decisions.keep.length === 0) summary += '  (אין)\n';
+  decisions.keep.forEach(e => {
+    summary += '  שאלה #' + e.index + ' (ID ' + e.id + ')' + (e.notes ? ' - ' + e.notes : '') + '\n';
+  });
+
+  summary += '\n🔧 לתקן (' + decisions.fix.length + '):\n';
+  if (decisions.fix.length === 0) summary += '  (אין)\n';
+  decisions.fix.forEach(e => {
+    summary += '  שאלה #' + e.index + ' (ID ' + e.id + ')' + (e.notes ? ' - ' + e.notes : '') + '\n';
+  });
+
+  summary += '\n🗑️ להסיר (' + decisions.remove.length + '):\n';
+  if (decisions.remove.length === 0) summary += '  (אין)\n';
+  decisions.remove.forEach(e => {
+    summary += '  שאלה #' + e.index + ' (ID ' + e.id + ')' + (e.notes ? ' - ' + e.notes : '') + '\n';
+  });
+
+  summary += '\n🔄 כפולות (' + decisions.duplicate.length + '):\n';
+  if (decisions.duplicate.length === 0) summary += '  (אין)\n';
+  decisions.duplicate.forEach(e => {
+    summary += '  שאלה #' + e.index + ' (ID ' + e.id + ')' + (e.notes ? ' - ' + e.notes : '') + '\n';
+  });
+
+  if (decisions.pending.length > 0) {
+    summary += '\n⏳ טרם נבדקו (' + decisions.pending.length + '):\n';
+    decisions.pending.forEach(e => {
+      summary += '  שאלה #' + e.index + ' (ID ' + e.id + ')\n';
+    });
+  }
+
+  summary += '\n===========================\n';
+
+  document.getElementById('summary-text').textContent = summary;
+  document.getElementById('summary-section').classList.add('visible');
+  document.getElementById('summary-section').scrollIntoView({ behavior: 'smooth' });
+}
+
+function copySummary() {
+  const text = document.getElementById('summary-text').textContent;
+  if (!text) { generateSummary(); }
+  const finalText = document.getElementById('summary-text').textContent;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(finalText).then(() => showToast('✅ הסיכום הועתק ללוח'));
+  } else {
+    const ta = document.createElement('textarea');
+    ta.value = finalText;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast('✅ הסיכום הועתק ללוח');
+  }
+}
+
+function copyState() {
+  const state = {};
+  for (let i = 0; i < TOTAL_ISSUES; i++) {
+    const radios = document.querySelectorAll('input[name="decision-' + i + '"]');
+    let val = '';
+    radios.forEach(r => { if (r.checked) val = r.value; });
+    const notes = document.getElementById('chief-notes-' + i);
+    if (val || (notes && notes.value)) {
+      state[i] = { decision: val, notes: notes ? notes.value : '' };
+    }
+  }
+  const json = JSON.stringify(state);
+  const code = btoa(unescape(encodeURIComponent(json)));
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(code).then(() => showToast('✅ המצב הועתק - שמור אותו בצד'));
+  } else {
+    const ta = document.createElement('textarea');
+    ta.value = code;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast('✅ המצב הועתק - שמור אותו בצד');
+  }
+}
+
+function loadState() {
+  const code = prompt('הדבק את קוד השמירה:');
+  if (!code) return;
+  try {
+    const json = decodeURIComponent(escape(atob(code.trim())));
+    const state = JSON.parse(json);
+    applyState(state);
+    showToast('✅ המצב נטען בהצלחה');
+  } catch(e) {
+    showToast('❌ קוד לא תקין');
+  }
+}
+
+// Init
+loadFromStorage();
+updateProgress();
+</script>
+
+</body>
+</html>
